@@ -1,0 +1,21 @@
+# Flask Core
+Flask==3.0.0
+Flask-Login==0.6.3
+
+# Google Cloud Firestore
+google-cloud-firestore==2.14.0
+google-cloud-storage==2.14.0
+
+# Authentication & Security
+Werkzeug==3.0.1
+PyJWT==2.8.0
+
+# Email
+Flask-Mail==0.9.1
+
+# Utils
+python-dotenv==1.0.0
+validators==0.22.0
+
+# Production Server
+gunicorn==21.2.0

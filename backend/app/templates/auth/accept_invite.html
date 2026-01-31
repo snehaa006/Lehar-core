@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Accept Invitation - {{ invitation.organization.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">🎉 You've Been Invited!</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h5>Join <strong>{{ invitation.organization.name }}</strong></h5>
+                        <p class="text-muted">
+                            {% if invitation.invited_by %}
+                                {{ invitation.invited_by.name }} has invited you to join their team
+                            {% else %}
+                                You've been invited to join this organization
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Your Details:</strong><br>
+                        📧 Email: {{ invitation.email }}<br>
+                        👤 Name: {{ invitation.name or 'Not specified' }}<br>
+                        🔑 Role: <span class="badge bg-secondary">{{ invitation.role|replace('_', ' ')|title }}</span>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('invitations.accept_invitation', token=token) }}">
+                        <h6 class="mb-3">Complete Your Registration</h6>
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ invitation.name or '' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number (Optional)</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   placeholder="+1234567890">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Create Password *</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="form-text">
+                                Must be at least 8 characters with uppercase, lowercase, and numbers
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password *</label>
+                            <input type="password" class="form-control" id="confirm_password" 
+                                   name="confirm_password" required>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                ✓ Accept Invitation & Create Account
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            By accepting, you agree to join {{ invitation.organization.name }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <p class="text-muted">
+                    Already have an account? <a href="{{ url_for('auth.login') }}">Log in here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Password confirmation validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return false;
+        }
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

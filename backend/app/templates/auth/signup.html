@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - Lehar Core{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Register Your Organization</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm">
+                        <!-- Organization Details -->
+                        <h5 class="mb-3">Organization Details</h5>
+                        
+                        <div class="mb-3">
+                            <label for="company_name" class="form-label">Company Name *</label>
+                            <input type="text" class="form-control {% if errors and errors.company_name %}is-invalid{% endif %}" 
+                                   id="company_name" name="company_name" required
+                                   value="{{ form_data.company_name if form_data else '' }}">
+                            {% if errors and errors.company_name %}
+                            <div class="invalid-feedback">{{ errors.company_name }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="industry_type" class="form-label">Industry Type</label>
+                                <select class="form-select" id="industry_type" name="industry_type">
+                                    <option value="">Select Industry</option>
+                                    <option value="Manufacturing">Manufacturing</option>
+                                    <option value="Textile">Textile</option>
+                                    <option value="Automotive">Automotive</option>
+                                    <option value="Food Processing">Food Processing</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="company_size" class="form-label">Company Size</label>
+                                <select class="form-select" id="company_size" name="company_size">
+                                    <option value="">Select Size</option>
+                                    <option value="1-50">1-50 employees</option>
+                                    <option value="50-200">50-200 employees</option>
+                                    <option value="200+">200+ employees</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="website" class="form-label">Company Website (Optional)</label>
+                            <input type="url" class="form-control" id="website" name="website"
+                                   placeholder="https://example.com"
+                                   value="{{ form_data.website if form_data else '' }}">
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Admin User Details -->
+                        <h5 class="mb-3">Primary Admin Details</h5>
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name *</label>
+                            <input type="text" class="form-control {% if errors and errors.name %}is-invalid{% endif %}" 
+                                   id="name" name="name" required
+                                   value="{{ form_data.name if form_data else '' }}">
+                            {% if errors and errors.name %}
+                            <div class="invalid-feedback">{{ errors.name }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Work Email *</label>
+                            <input type="email" class="form-control {% if errors and errors.email %}is-invalid{% endif %}" 
+                                   id="email" name="email" required
+                                   value="{{ form_data.email if form_data else '' }}">
+                            <small class="text-muted">Use your company email for better verification</small>
+                            {% if errors and errors.email %}
+                            <div class="invalid-feedback">{{ errors.email }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <input type="password" class="form-control {% if errors and errors.password %}is-invalid{% endif %}" 
+                                       id="password" name="password" required>
+                                <small class="text-muted">Min 8 chars, 1 uppercase, 1 lowercase, 1 digit</small>
+                                {% if errors and errors.password %}
+                                <div class="invalid-feedback">{{ errors.password }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control {% if errors and errors.phone %}is-invalid{% endif %}" 
+                                       id="phone" name="phone"
+                                       value="{{ form_data.phone if form_data else '' }}">
+                                {% if errors and errors.phone %}
+                                <div class="invalid-feedback">{{ errors.phone }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="job_title" class="form-label">Job Role</label>
+                            <input type="text" class="form-control" id="job_title" name="job_title"
+                                   placeholder="e.g., Plant Head, IT Manager"
+                                   value="{{ form_data.job_title if form_data else '' }}">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Create Organization</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
