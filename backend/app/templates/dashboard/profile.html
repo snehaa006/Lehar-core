@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>My Profile</h2>
+            <p class="text-muted">Manage your account information</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Profile Information Card -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dashboard.profile') }}">
+                        <input type="hidden" name="action" value="update_profile">
+                        
+                        <div class="form-group">
+                            <label for="name">Full Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ user.name }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" class="form-control" id="email" 
+                                   value="{{ user.email }}" disabled>
+                            <small class="form-text text-muted">Email cannot be changed</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="{{ user.phone or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="job_title">Job Title</label>
+                            <input type="text" class="form-control" id="job_title" name="job_title" 
+                                   value="{{ user.job_title or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Role</label>
+                            <input type="text" class="form-control" 
+                                   value="{{ user.role.value|replace('_', ' ')|title }}" disabled>
+                            <small class="form-text text-muted">Contact your admin to change your role</small>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Change Card -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dashboard.profile') }}">
+                        <input type="hidden" name="action" value="change_password">
+                        
+                        <div class="form-group">
+                            <label for="current_password">Current Password *</label>
+                            <input type="password" class="form-control" id="current_password" 
+                                   name="current_password" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new_password">New Password *</label>
+                            <input type="password" class="form-control" id="new_password" 
+                                   name="new_password" required>
+                            <small class="form-text text-muted">
+                                Must be at least 8 characters with uppercase, lowercase, and numbers
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm_password">Confirm New Password *</label>
+                            <input type="password" class="form-control" id="confirm_password" 
+                                   name="confirm_password" required>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-key"></i> Update Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Account Info Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm">
+                        <tbody>
+                            <tr>
+                                <td><strong>Organization:</strong></td>
+                                <td>{{ organization.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email Verified:</strong></td>
+                                <td>
+                                    {% if user.is_email_verified %}
+                                        <span class="badge badge-success">✓ Verified</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Not Verified</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Account Status:</strong></td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Member Since:</strong></td>
+                                <td>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Last Login:</strong></td>
+                                <td>{{ user.last_login.strftime('%B %d, %Y at %I:%M %p') if user.last_login else 'Never' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
