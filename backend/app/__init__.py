@@ -43,11 +43,12 @@ def create_app(config_name=None):
         return User.get_by_id(user_id)
     
     # Register blueprints
-    from app.blueprints import auth_bp, dashboard_bp, invitations_bp
-    
+    from app.blueprints import auth_bp, dashboard_bp, invitations_bp, workspaces_bp
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(invitations_bp)
+    app.register_blueprint(workspaces_bp)
     
     # Register error handlers
     register_error_handlers(app)
