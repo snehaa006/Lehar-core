@@ -273,6 +273,7 @@ def cancel_invitation(invitation_id):
         return redirect(url_for("workspaces.list_workspaces"))
 
     workspace_id = invitation.workspace_id
+    redirect_to = request.args.get("redirect_to", "workspace")
 
     success, error = InvitationService.cancel_invitation(
         invitation_id=invitation_id,
@@ -288,5 +289,9 @@ def cancel_invitation(invitation_id):
         flash(error, "error")
     else:
         flash("Invitation cancelled", "success")
+
+    # Redirect back to invitations list if that's where we came from
+    if redirect_to == "invitations":
+        return redirect(url_for("invitations.list_invitations"))
 
     return redirect(url_for("workspaces.view_workspace", workspace_id=workspace_id))

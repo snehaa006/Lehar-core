@@ -110,6 +110,7 @@
                     <a href="{{ url_for('dashboard.index') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Dashboard</a>
                     <a href="{{ url_for('workspaces.list_workspaces') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Workspaces</a>
                     {% if current_user.is_org_admin() %}
+                    <a href="{{ url_for('invitations.list_invitations') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Invitations</a>
                     <a href="{{ url_for('dashboard.organization_settings') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Organization</a>
                     {% endif %}
 
