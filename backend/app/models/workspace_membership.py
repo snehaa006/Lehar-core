@@ -208,6 +208,11 @@ class WorkspaceMembership:
             self._workspace_obj = Workspace.get_by_id(self.workspace_id)
         return self._workspace_obj
 
+    @property
+    def role(self):
+        """Alias for workspace_role for template compatibility"""
+        return self.workspace_role
+
     def to_dict(self, include_user: bool = False, include_workspace: bool = False) -> Dict[str, Any]:
         """Convert to dictionary for JSON responses"""
         data = {
