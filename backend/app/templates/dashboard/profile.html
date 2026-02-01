@@ -3,101 +3,97 @@
 {% block title %}Profile - {{ user.name }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h2>My Profile</h2>
-            <p class="text-muted">Manage your account information</p>
-        </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-text-primary">My Profile</h1>
+        <p class="text-text-muted mt-1">Manage your account information</p>
     </div>
 
-    <div class="row mt-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Profile Information Card -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Personal Information</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('dashboard.profile') }}">
-                        <input type="hidden" name="action" value="update_profile">
-                        
-                        <div class="form-group">
-                            <label for="name">Full Name *</label>
-                            <input type="text" class="form-control" id="name" name="name" 
-                                   value="{{ user.name }}" required>
+        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border">
+                <h2 class="text-lg font-semibold text-text-primary">Personal Information</h2>
+            </div>
+            <div class="p-6">
+                <form method="POST" action="{{ url_for('dashboard.profile') }}">
+                    <input type="hidden" name="action" value="update_profile">
+
+                    <div class="space-y-5">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-text-secondary mb-2">Full Name *</label>
+                            <input type="text" id="name" name="name" value="{{ user.name }}" required
+                                   class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright">
                         </div>
 
-                        <div class="form-group">
-                            <label for="email">Email Address</label>
-                            <input type="email" class="form-control" id="email" 
-                                   value="{{ user.email }}" disabled>
-                            <small class="form-text text-muted">Email cannot be changed</small>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-text-secondary mb-2">Email Address</label>
+                            <input type="email" id="email" value="{{ user.email }}" disabled
+                                   class="w-full px-4 py-3 bg-dark-border border border-dark-border rounded-lg text-text-muted cursor-not-allowed">
+                            <p class="mt-1 text-xs text-text-muted">Email cannot be changed</p>
                         </div>
 
-                        <div class="form-group">
-                            <label for="phone">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" 
-                                   value="{{ user.phone or '' }}">
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-text-secondary mb-2">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" value="{{ user.phone or '' }}"
+                                   class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright">
                         </div>
 
-                        <div class="form-group">
-                            <label for="job_title">Job Title</label>
-                            <input type="text" class="form-control" id="job_title" name="job_title" 
-                                   value="{{ user.job_title or '' }}">
+                        <div>
+                            <label for="job_title" class="block text-sm font-medium text-text-secondary mb-2">Job Title</label>
+                            <input type="text" id="job_title" name="job_title" value="{{ user.job_title or '' }}"
+                                   class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright">
                         </div>
 
-                        <div class="form-group">
-                            <label>Role</label>
-                            <input type="text" class="form-control" 
-                                   value="{{ user.role.value|replace('_', ' ')|title }}" disabled>
-                            <small class="form-text text-muted">Contact your admin to change your role</small>
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-2">Organization Role</label>
+                            <input type="text" value="{{ user.org_role.value|replace('_', ' ')|title }}" disabled
+                                   class="w-full px-4 py-3 bg-dark-border border border-dark-border rounded-lg text-text-muted cursor-not-allowed">
+                            <p class="mt-1 text-xs text-text-muted">Contact your organization admin to change your role</p>
                         </div>
 
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                        <button type="submit" class="w-full px-6 py-3 btn-primary rounded-lg text-dark-bg font-semibold">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <!-- Password Change Card -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Change Password</h5>
+        <!-- Right Column -->
+        <div class="space-y-8">
+            <!-- Password Change Card -->
+            <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-dark-border">
+                    <h2 class="text-lg font-semibold text-text-primary">Change Password</h2>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     <form method="POST" action="{{ url_for('dashboard.profile') }}">
                         <input type="hidden" name="action" value="change_password">
-                        
-                        <div class="form-group">
-                            <label for="current_password">Current Password *</label>
-                            <input type="password" class="form-control" id="current_password" 
-                                   name="current_password" required>
-                        </div>
 
-                        <div class="form-group">
-                            <label for="new_password">New Password *</label>
-                            <input type="password" class="form-control" id="new_password" 
-                                   name="new_password" required>
-                            <small class="form-text text-muted">
-                                Must be at least 8 characters with uppercase, lowercase, and numbers
-                            </small>
-                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <label for="current_password" class="block text-sm font-medium text-text-secondary mb-2">Current Password *</label>
+                                <input type="password" id="current_password" name="current_password" required
+                                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright">
+                            </div>
 
-                        <div class="form-group">
-                            <label for="confirm_password">Confirm New Password *</label>
-                            <input type="password" class="form-control" id="confirm_password" 
-                                   name="confirm_password" required>
-                        </div>
+                            <div>
+                                <label for="new_password" class="block text-sm font-medium text-text-secondary mb-2">New Password *</label>
+                                <input type="password" id="new_password" name="new_password" required
+                                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright">
+                                <p class="mt-1 text-xs text-text-muted">At least 8 characters with uppercase, lowercase, and numbers</p>
+                            </div>
 
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-key"></i> Update Password
+                            <div>
+                                <label for="confirm_password" class="block text-sm font-medium text-text-secondary mb-2">Confirm New Password *</label>
+                                <input type="password" id="confirm_password" name="confirm_password" required
+                                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright">
+                            </div>
+
+                            <button type="submit" class="w-full px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-semibold transition-colors">
+                                Update Password
                             </button>
                         </div>
                     </form>
@@ -105,47 +101,69 @@
             </div>
 
             <!-- Account Info Card -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Account Information</h5>
+            <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-dark-border">
+                    <h2 class="text-lg font-semibold text-text-primary">Account Information</h2>
                 </div>
-                <div class="card-body">
-                    <table class="table table-borderless table-sm">
-                        <tbody>
-                            <tr>
-                                <td><strong>Organization:</strong></td>
-                                <td>{{ organization.name }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Email Verified:</strong></td>
-                                <td>
-                                    {% if user.is_email_verified %}
-                                        <span class="badge badge-success">✓ Verified</span>
-                                    {% else %}
-                                        <span class="badge badge-warning">Not Verified</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Account Status:</strong></td>
-                                <td>
-                                    {% if user.is_active %}
-                                        <span class="badge badge-success">Active</span>
-                                    {% else %}
-                                        <span class="badge badge-danger">Inactive</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Member Since:</strong></td>
-                                <td>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Last Login:</strong></td>
-                                <td>{{ user.last_login.strftime('%B %d, %Y at %I:%M %p') if user.last_login else 'Never' }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                            <span class="text-text-muted">Organization</span>
+                            <span class="text-text-primary font-medium">{{ organization.name }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                            <span class="text-text-muted">Email Verified</span>
+                            {% if user.is_email_verified %}
+                                <span class="px-2 py-1 bg-green-900/30 text-green-400 text-xs rounded-full">Verified</span>
+                            {% else %}
+                                <span class="px-2 py-1 bg-amber-900/30 text-amber-400 text-xs rounded-full">Not Verified</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                            <span class="text-text-muted">Account Status</span>
+                            {% if user.is_active %}
+                                <span class="px-2 py-1 bg-green-900/30 text-green-400 text-xs rounded-full">Active</span>
+                            {% else %}
+                                <span class="px-2 py-1 bg-red-900/30 text-red-400 text-xs rounded-full">Inactive</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                            <span class="text-text-muted">Member Since</span>
+                            <span class="text-text-primary">{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-text-muted">Last Login</span>
+                            <span class="text-text-primary">{{ user.last_login.strftime('%b %d, %Y %I:%M %p') if user.last_login else 'Never' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace Memberships -->
+            <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-dark-border">
+                    <h2 class="text-lg font-semibold text-text-primary">Your Workspaces</h2>
+                </div>
+                <div class="p-6">
+                    {% if user.workspace_memberships %}
+                    <div class="space-y-3">
+                        {% for membership in user.workspace_memberships %}
+                        <div class="flex items-center justify-between p-3 bg-dark-bg rounded-lg border border-dark-border">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-lg flex items-center justify-center">
+                                    <span class="text-white text-xs font-semibold">{{ membership.workspace.name[0].upper() if membership.workspace else '?' }}</span>
+                                </div>
+                                <span class="text-text-primary">{{ membership.workspace.name if membership.workspace else 'Unknown' }}</span>
+                            </div>
+                            <span class="text-xs px-2 py-1 bg-dark-border text-text-muted rounded">
+                                {{ membership.role.value | title }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-text-muted text-center py-4">No workspace memberships</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

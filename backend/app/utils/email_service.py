@@ -124,50 +124,102 @@ def send_verification_email(user_email, user_name, verification_token):
     return send_email(user_email, subject, html_body, text_body)
 
 
-def send_invitation_email(invite_email, invite_name, organization_name, invitation_token, invited_by_name):
+def send_invitation_email(invite_email, invite_name, organization_name, workspace_name, invitation_token, invited_by_name):
     """
-    Send invitation email to join an organization
+    Send invitation email to join a workspace
+
+    Args:
+        invite_email: Recipient email
+        invite_name: Recipient name (optional)
+        organization_name: Name of the organization
+        workspace_name: Name of the workspace being invited to
+        invitation_token: Unique invitation token
+        invited_by_name: Name of the person sending the invitation
     """
-    # FIX: Use BACKEND_URL for invitations too
     invitation_url = f"{current_app.config['BACKEND_URL']}/invitations/accept?token={invitation_token}"
-    
-    subject = f"You've been invited to join {organization_name} on Lehar Core"
-    
+
+    subject = f"You've been invited to join {workspace_name} at {organization_name}"
+
     html_body = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-            .button {{ 
-                display: inline-block; 
-                padding: 12px 24px; 
-                background-color: #28a745; 
-                color: white; 
-                text-decoration: none; 
-                border-radius: 5px; 
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; }}
+            .header {{ background-color: #0a0b0d; color: #07dcf4; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
+            .content {{ padding: 30px 20px; }}
+            .button {{
+                display: inline-block;
+                padding: 14px 28px;
+                background-color: #07dcf4;
+                color: #0a0b0d;
+                text-decoration: none;
+                border-radius: 6px;
                 margin: 20px 0;
+                font-weight: bold;
             }}
+            .workspace-info {{
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 6px;
+                margin: 20px 0;
+                border-left: 4px solid #07dcf4;
+            }}
+            .footer {{ margin-top: 30px; font-size: 12px; color: #666; text-align: center; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h2>You've Been Invited!</h2>
-            <p>Hi {invite_name or 'there'},</p>
-            <p><strong>{invited_by_name}</strong> has invited you to join <strong>{organization_name}</strong> on Lehar Core Platform.</p>
-            
-            <a href="{invitation_url}" class="button">Accept Invitation</a>
-            
-            <p>Or copy this link: {invitation_url}</p>
-            
-            <p>This invitation expires in 7 days.</p>
+            <div class="header">
+                <h2 style="margin: 0;">You've Been Invited!</h2>
+            </div>
+            <div class="content">
+                <p>Hi {invite_name or 'there'},</p>
+                <p><strong>{invited_by_name}</strong> has invited you to join a workspace on Lehar Core Platform.</p>
+
+                <div class="workspace-info">
+                    <p style="margin: 0;"><strong>Organization:</strong> {organization_name}</p>
+                    <p style="margin: 10px 0 0 0;"><strong>Workspace:</strong> {workspace_name}</p>
+                </div>
+
+                <p style="text-align: center;">
+                    <a href="{invitation_url}" class="button">Accept Invitation</a>
+                </p>
+
+                <p>Or copy and paste this link into your browser:</p>
+                <p style="word-break: break-all; color: #07dcf4;">{invitation_url}</p>
+
+                <p><strong>This invitation expires in 7 days.</strong></p>
+            </div>
+            <div class="footer">
+                <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+                <p>© 2026 Lehar Core Platform. All rights reserved.</p>
+            </div>
         </div>
     </body>
     </html>
     """
-    
-    return send_email(invite_email, subject, html_body)
+
+    text_body = f"""
+    You've Been Invited to Lehar Core Platform!
+
+    Hi {invite_name or 'there'},
+
+    {invited_by_name} has invited you to join a workspace.
+
+    Organization: {organization_name}
+    Workspace: {workspace_name}
+
+    Accept the invitation by clicking this link:
+    {invitation_url}
+
+    This invitation expires in 7 days.
+
+    If you didn't expect this invitation, you can safely ignore this email.
+    """
+
+    return send_email(invite_email, subject, html_body, text_body)
 
 
 def send_password_reset_email(user_email, user_name, reset_token):

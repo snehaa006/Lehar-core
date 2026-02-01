@@ -3,294 +3,301 @@
 {% block title %}Organization Settings - {{ organization.name }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h2>Organization Settings</h2>
-            <p class="text-muted">Manage your organization details and team members</p>
-        </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-text-primary">Organization Settings</h1>
+        <p class="text-text-muted mt-1">Manage your organization details, workspaces, and team</p>
     </div>
 
-    <!-- Organization Details Card -->
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Organization Details</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
-                        <tbody>
-                            <tr>
-                                <td><strong>Organization Name:</strong></td>
-                                <td>{{ organization.name }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Plan Type:</strong></td>
-                                <td>
-                                    <span class="badge bg-primary">{{ organization.plan_type.value|upper }}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Industry:</strong></td>
-                                <td>{{ organization.industry_type or 'Not specified' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Company Size:</strong></td>
-                                <td>{{ organization.company_size or 'Not specified' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Domain:</strong></td>
-                                <td>{{ organization.domain or 'Not specified' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Website:</strong></td>
-                                <td>
-                                    {% if organization.website %}
-                                        <a href="{{ organization.website }}" target="_blank">{{ organization.website }}</a>
-                                    {% else %}
-                                        Not specified
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Status:</strong></td>
-                                <td>
-                                    {% if organization.is_active %}
-                                        <span class="badge bg-success">Active</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inactive</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Email Verified:</strong></td>
-                                <td>
-                                    {% if organization.is_email_verified %}
-                                        <span class="badge bg-success">✓ Verified</span>
-                                    {% else %}
-                                        <span class="badge bg-warning">Not Verified</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Created:</strong></td>
-                                <td>{{ organization.created_at.strftime('%B %d, %Y') if organization.created_at else 'N/A' }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    {% if current_user.role.value == 'super_admin' %}
-                    <div class="mt-3">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editOrgModal">
-                            <i class="fas fa-edit"></i> Edit Organization
-                        </button>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Organization Details Card -->
+        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-text-primary">Organization Details</h2>
+                {% if current_user.is_org_owner() %}
+                <button onclick="document.getElementById('editOrgModal').classList.remove('hidden')"
+                        class="text-sm px-3 py-1 bg-dark-border hover:bg-cyan-dark text-text-secondary hover:text-white rounded transition-colors">
+                    Edit
+                </button>
+                {% endif %}
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-text-muted">Organization Name</span>
+                        <span class="text-text-primary font-medium">{{ organization.name }}</span>
                     </div>
-                    {% endif %}
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-text-muted">Plan Type</span>
+                        <span class="px-3 py-1 bg-cyan-dark/20 text-cyan-bright text-sm rounded-full">{{ organization.plan_type.value | title }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-text-muted">Domain</span>
+                        <span class="text-text-primary">{{ organization.domain or 'Not specified' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-text-muted">Industry</span>
+                        <span class="text-text-primary">{{ organization.industry_type or 'Not specified' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-text-muted">Company Size</span>
+                        <span class="text-text-primary">{{ organization.company_size or 'Not specified' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-text-muted">Website</span>
+                        {% if organization.website %}
+                        <a href="{{ organization.website }}" target="_blank" class="text-cyan-bright hover:text-cyan-light">{{ organization.website }}</a>
+                        {% else %}
+                        <span class="text-text-muted">Not specified</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-text-muted">Status</span>
+                        {% if organization.is_active %}
+                        <span class="px-2 py-1 bg-green-900/30 text-green-400 text-xs rounded-full">Active</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-red-900/30 text-red-400 text-xs rounded-full">Inactive</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-text-muted">Created</span>
+                        <span class="text-text-primary">{{ organization.created_at.strftime('%B %d, %Y') if organization.created_at else 'N/A' }}</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Plan Limits Card -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Plan Limits</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <h6>Current Users</h6>
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" 
-                                 style="width: {{ (users|length / organization.max_users * 100) if organization.max_users else 0 }}%">
-                                {{ users|length }}{% if organization.max_users %} / {{ organization.max_users }}{% endif %}
-                            </div>
-                        </div>
-                        {% if not organization.max_users %}
-                            <small class="text-muted">Unlimited users</small>
-                        {% endif %}
+        <!-- Plan & Usage Card -->
+        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border">
+                <h2 class="text-lg font-semibold text-text-primary">Plan & Usage</h2>
+            </div>
+            <div class="p-6">
+                <!-- Users Progress -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-text-secondary">Organization Members</span>
+                        <span class="text-text-primary font-medium">
+                            {{ users|length }}{% if organization.max_users %} / {{ organization.max_users }}{% endif %}
+                        </span>
                     </div>
-
-                    {% if current_user.role.value == 'super_admin' %}
-                    <div class="mt-4">
-                        <button class="btn btn-success" onclick="window.location.href='#'">
-                            <i class="fas fa-arrow-up"></i> Upgrade Plan
-                        </button>
+                    <div class="w-full bg-dark-border rounded-full h-2">
+                        <div class="bg-gradient-to-r from-cyan-dark to-cyan-bright h-2 rounded-full"
+                             style="width: {{ (users|length / organization.max_users * 100) if organization.max_users else 50 }}%"></div>
                     </div>
+                    {% if not organization.max_users %}
+                    <p class="text-xs text-text-muted mt-1">Unlimited users</p>
                     {% endif %}
                 </div>
+
+                <!-- Workspaces Progress -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-text-secondary">Workspaces</span>
+                        <span class="text-text-primary font-medium">
+                            {{ workspaces|length if workspaces is defined else 0 }}{% if organization.max_workspaces %} / {{ organization.max_workspaces }}{% endif %}
+                        </span>
+                    </div>
+                    <div class="w-full bg-dark-border rounded-full h-2">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-400 h-2 rounded-full"
+                             style="width: {{ ((workspaces|length if workspaces is defined else 0) / organization.max_workspaces * 100) if organization.max_workspaces else 50 }}%"></div>
+                    </div>
+                    {% if not organization.max_workspaces %}
+                    <p class="text-xs text-text-muted mt-1">Unlimited workspaces</p>
+                    {% endif %}
+                </div>
+
+                <!-- Plan Features -->
+                <div class="border-t border-dark-border pt-4 mt-4">
+                    <h3 class="text-sm font-medium text-text-secondary mb-3">Plan Features</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-sm text-text-muted">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Multi-workspace support
+                        </li>
+                        <li class="flex items-center text-sm text-text-muted">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Role-based access control
+                        </li>
+                        <li class="flex items-center text-sm text-text-muted">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Team invitations
+                        </li>
+                    </ul>
+                </div>
+
+                {% if current_user.is_org_owner() %}
+                <div class="mt-6">
+                    <button class="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-lg font-medium transition-colors">
+                        Upgrade Plan
+                    </button>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
     <!-- Team Members Section -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Team Members ({{ users|length }})</h5>
-                    {% if current_user.role.value in ['super_admin', 'admin'] %}
-                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#inviteUserModal">
-                        <i class="fas fa-user-plus"></i> Invite User
-                    </button>
-                    {% endif %}
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Joined</th>
-                                    {% if current_user.role.value in ['super_admin', 'admin'] %}
-                                    <th>Actions</th>
-                                    {% endif %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in users %}
-                                <tr>
-                                    <td>
-                                        {{ user.name }}
-                                        {% if user.id == current_user.id %}
-                                            <span class="badge bg-info badge-sm">You</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ user.email }}</td>
-                                    <td>
-                                        <span class="badge bg-secondary">{{ user.role.value|replace('_', ' ')|title }}</span>
-                                    </td>
-                                    <td>
-                                        {% if user.is_active %}
-                                            <span class="badge bg-success">Active</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Inactive</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}</td>
-                                    {% if current_user.role.value in ['super_admin', 'admin'] %}
-                                    <td>
-                                        {% if user.id != current_user.id %}
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-primary" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger" title="Deactivate">
-                                                <i class="fas fa-ban"></i>
-                                            </button>
-                                        </div>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    {% endif %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {% if users|length == 0 %}
-                    <div class="text-center py-4">
-                        <p class="text-muted">No team members found.</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+    <div class="mt-8 bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-text-primary">Organization Members ({{ users|length }})</h2>
+            {% if current_user.is_org_admin() %}
+            <a href="{{ url_for('invitations.list_invitations') }}" class="text-sm px-4 py-2 btn-primary rounded-lg text-dark-bg font-medium">
+                + Invite Members
+            </a>
+            {% endif %}
         </div>
-    </div>
-</div>
-
-<!-- Edit Organization Modal (Bootstrap 5) -->
-{% if current_user.role.value == 'super_admin' %}
-<div class="modal fade" id="editOrgModal" tabindex="-1" aria-labelledby="editOrgModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editOrgModalLabel">Edit Organization</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('dashboard.organization_settings') }}">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="orgName" class="form-label">Organization Name</label>
-                        <input type="text" class="form-control" id="orgName" name="name" value="{{ organization.name }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="orgWebsite" class="form-label">Website</label>
-                        <input type="url" class="form-control" id="orgWebsite" name="website" value="{{ organization.website or '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label for="orgIndustry" class="form-label">Industry Type</label>
-                        <input type="text" class="form-control" id="orgIndustry" name="industry_type" value="{{ organization.industry_type or '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label for="orgSize" class="form-label">Company Size</label>
-                        <select class="form-select" id="orgSize" name="company_size">
-                            <option value="">Select size</option>
-                            <option value="1-10" {% if organization.company_size == '1-10' %}selected{% endif %}>1-10</option>
-                            <option value="11-50" {% if organization.company_size == '11-50' %}selected{% endif %}>11-50</option>
-                            <option value="51-200" {% if organization.company_size == '51-200' %}selected{% endif %}>51-200</option>
-                            <option value="201-500" {% if organization.company_size == '201-500' %}selected{% endif %}>201-500</option>
-                            <option value="500+" {% if organization.company_size == '500+' %}selected{% endif %}>500+</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Invite User Modal (Bootstrap 5) -->
-{% if current_user.role.value in ['super_admin', 'admin'] %}
-<div class="modal fade" id="inviteUserModal" tabindex="-1" aria-labelledby="inviteUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="inviteUserModalLabel">Invite Team Member</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('invitations.send_invitation') }}">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="inviteName" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="inviteName" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="inviteEmail" class="form-label">Email Address *</label>
-                        <input type="email" class="form-control" id="inviteEmail" name="email" required>
-                        <div class="form-text">An invitation will be sent to this email</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="inviteRole" class="form-label">Role *</label>
-                        <select class="form-select" id="inviteRole" name="role" required>
-                            <option value="viewer">Viewer (Read-only access)</option>
-                            <option value="hr">HR User (HR module access)</option>
-                            <option value="manager">Manager (Operational modules)</option>
-                            {% if current_user.role.value == 'super_admin' %}
-                            <option value="admin">Admin (Manage modules & users)</option>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-dark-bg">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Org Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Workspaces</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Joined</th>
+                        {% if current_user.is_org_admin() %}
+                        <th class="px-6 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-dark-border">
+                    {% for user in users %}
+                    <tr class="hover:bg-dark-bg/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-white text-xs font-semibold">{{ user.name[0].upper() }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-text-primary font-medium">{{ user.name }}</span>
+                                    {% if user.id == current_user.id %}
+                                    <span class="ml-2 px-2 py-0.5 bg-cyan-dark/20 text-cyan-bright text-xs rounded">You</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-text-secondary">{{ user.email }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full
+                                {% if user.org_role.value == 'org_owner' %}bg-purple-900/30 text-purple-400
+                                {% elif user.org_role.value == 'org_admin' %}bg-blue-900/30 text-blue-400
+                                {% else %}bg-dark-border text-text-muted{% endif %}">
+                                {{ user.org_role.value | replace('_', ' ') | title }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-text-muted">
+                            {{ user.workspace_memberships | length if user.workspace_memberships else 0 }} workspace(s)
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if user.is_active %}
+                            <span class="px-2 py-1 bg-green-900/30 text-green-400 text-xs rounded-full">Active</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-red-900/30 text-red-400 text-xs rounded-full">Inactive</span>
                             {% endif %}
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i> Send Invitation
-                    </button>
-                </div>
-            </form>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-text-muted text-sm">
+                            {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}
+                        </td>
+                        {% if current_user.is_org_admin() %}
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            {% if user.id != current_user.id %}
+                            <div class="flex items-center justify-end space-x-2">
+                                <button class="p-2 text-text-muted hover:text-cyan-bright transition-colors" title="Edit Role">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button class="p-2 text-text-muted hover:text-red-400 transition-colors" title="Deactivate">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            {% else %}
+                            <span class="text-text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+
+        {% if users|length == 0 %}
+        <div class="text-center py-12">
+            <svg class="w-12 h-12 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m6 5.197v-1"/>
+            </svg>
+            <p class="text-text-muted">No team members found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Edit Organization Modal -->
+{% if current_user.is_org_owner() %}
+<div id="editOrgModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div class="bg-dark-card border border-dark-border rounded-xl w-full max-w-md mx-4">
+        <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-text-primary">Edit Organization</h3>
+            <button onclick="document.getElementById('editOrgModal').classList.add('hidden')"
+                    class="text-text-muted hover:text-text-primary transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('dashboard.organization_settings') }}">
+            <div class="p-6 space-y-4">
+                <div>
+                    <label for="orgName" class="block text-sm font-medium text-text-secondary mb-2">Organization Name</label>
+                    <input type="text" id="orgName" name="name" value="{{ organization.name }}" required
+                           class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                </div>
+                <div>
+                    <label for="orgWebsite" class="block text-sm font-medium text-text-secondary mb-2">Website</label>
+                    <input type="url" id="orgWebsite" name="website" value="{{ organization.website or '' }}"
+                           class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                </div>
+                <div>
+                    <label for="orgIndustry" class="block text-sm font-medium text-text-secondary mb-2">Industry Type</label>
+                    <input type="text" id="orgIndustry" name="industry_type" value="{{ organization.industry_type or '' }}"
+                           class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                </div>
+                <div>
+                    <label for="orgSize" class="block text-sm font-medium text-text-secondary mb-2">Company Size</label>
+                    <select id="orgSize" name="company_size"
+                            class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                        <option value="">Select size</option>
+                        <option value="1-10" {% if organization.company_size == '1-10' %}selected{% endif %}>1-10</option>
+                        <option value="11-50" {% if organization.company_size == '11-50' %}selected{% endif %}>11-50</option>
+                        <option value="51-200" {% if organization.company_size == '51-200' %}selected{% endif %}>51-200</option>
+                        <option value="201-500" {% if organization.company_size == '201-500' %}selected{% endif %}>201-500</option>
+                        <option value="500+" {% if organization.company_size == '500+' %}selected{% endif %}>500+</option>
+                    </select>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-dark-border flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('editOrgModal').classList.add('hidden')"
+                        class="px-4 py-2 bg-dark-border hover:bg-dark-bg text-text-secondary rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 btn-primary rounded-lg text-dark-bg font-medium">
+                    Save Changes
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endif %}
-
 {% endblock %}
