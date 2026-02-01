@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lehar Core{% endblock %}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Configure Tailwind with custom colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0b0d',
+                        'dark-card': '#1a1c23',
+                        'dark-border': '#2a2d36',
+                        'cyan-bright': '#07dcf4',
+                        'cyan-light': '#39e5f6',
+                        'cyan-dark': '#06b0c7',
+                        'text-primary': '#ffffff',
+                        'text-secondary': '#c0e8ee',
+                        'text-muted': '#b0d8dd',
+                        'text-subtle': '#d0e8ec',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom styles -->
+    <style>
+        body {
+            background-color: #0a0b0d;
+            color: #ffffff;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1c23;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #06b0c7;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #07dcf4;
+        }
+
+        /* Focus styles */
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #07dcf4;
+            box-shadow: 0 0 0 2px rgba(7, 220, 244, 0.2);
+        }
+
+        /* Button hover effects */
+        .btn-primary {
+            background: linear-gradient(135deg, #07dcf4, #06b0c7);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #39e5f6, #07dcf4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(7, 220, 244, 0.3);
+        }
+
+        /* Card hover effect */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            border-color: #07dcf4;
+            box-shadow: 0 4px 20px rgba(7, 220, 244, 0.15);
+        }
+
+        /* Link styles */
+        a.link-cyan {
+            color: #07dcf4;
+            transition: color 0.2s ease;
+        }
+        a.link-cyan:hover {
+            color: #39e5f6;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="h-full bg-dark-bg text-text-primary">
+    <!-- Navigation -->
+    {% if current_user.is_authenticated %}
+    <nav class="bg-dark-card border-b border-dark-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('dashboard.index') }}" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">L</span>
+                        </div>
+                        <span class="text-xl font-semibold text-text-primary">Lehar Core</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center space-x-6">
+                    <a href="{{ url_for('dashboard.index') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Dashboard</a>
+                    <a href="{{ url_for('workspaces.list_workspaces') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Workspaces</a>
+                    {% if current_user.is_org_admin() %}
+                    <a href="{{ url_for('invitations.list_invitations') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Invitations</a>
+                    <a href="{{ url_for('dashboard.organization_settings') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Organization</a>
+                    {% endif %}
+
+                    <!-- User dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button class="flex items-center space-x-2 text-text-secondary hover:text-cyan-bright transition-colors">
+                            <div class="w-8 h-8 bg-dark-border rounded-full flex items-center justify-center">
+                                <span class="text-sm font-medium">{{ current_user.name[0].upper() }}</span>
+                            </div>
+                            <span class="hidden md:block">{{ current_user.name }}</span>
+                        </button>
+                    </div>
+
+                    <a href="{{ url_for('dashboard.profile') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Profile</a>
+                    <a href="{{ url_for('auth.logout') }}" class="px-4 py-2 bg-dark-border hover:bg-cyan-dark text-text-primary rounded-lg transition-colors">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                {% for category, message in messages %}
+                    <div class="mb-3 p-4 rounded-lg border {% if category == 'success' %}bg-green-900/30 border-green-500 text-green-300{% elif category == 'error' %}bg-red-900/30 border-red-500 text-red-300{% else %}bg-cyan-900/30 border-cyan-bright text-cyan-light{% endif %}">
+                        <div class="flex items-center justify-between">
+                            <span>{{ message }}</span>
+                            <button onclick="this.parentElement.parentElement.remove()" class="text-current opacity-70 hover:opacity-100">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-card border-t border-dark-border py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-text-muted text-sm">2026 Lehar Core Platform. All rights reserved.</p>
+                <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                    <span class="text-text-subtle text-sm">Industrial ERP Solution</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
