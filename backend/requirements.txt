@@ -16,6 +16,7 @@ Flask-Mail==0.9.1
 # Utils
 python-dotenv==1.0.0
 validators==0.22.0
+email-validator==2.1.0
 
 # Production Server
 gunicorn==21.2.0
