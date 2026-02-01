@@ -13,8 +13,8 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
     APP_NAME = "Lehar Core Platform"
 
-    # Firestore Configuration
-    GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "manufacture-erp-prod-70700")
+    # Firestore/GCP Configuration
+    GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "manufacture-erp-prod")
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
 
     # JWT Configuration
@@ -84,7 +84,7 @@ class ProductionConfig(Config):
     FRONTEND_URL = os.getenv("FRONTEND_URL", "https://lehar-core-444463644765.asia-south2.run.app")
 
     # GCP Project
-    GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "manufacture-erp-prod-70700")
+    GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "manufacture-erp-prod")
 
 
 class TestingConfig(Config):
