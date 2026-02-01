@@ -119,6 +119,10 @@ def list_invitations():
         status=status
     )
 
+    # Get workspaces for the invite form
+    from app.services import WorkspaceService
+    workspaces = WorkspaceService.get_organization_workspaces(current_user.organization_id)
+
     if request.is_json:
         return jsonify({
             "invitations": [inv.to_dict() for inv in invitations]
@@ -126,5 +130,57 @@ def list_invitations():
 
     return render_template(
         "dashboard/invitations.html",
-        invitations=invitations
+        invitations=invitations,
+        workspaces=workspaces
     )
+
+
+@invitations_bp.route("/send", methods=["POST"])
+@login_required
+def send_invitation():
+    """Send a new invitation"""
+    if not current_user.is_org_admin():
+        flash("You don't have permission to send invitations", "error")
+        return redirect(url_for("dashboard.index"))
+
+    data = request.get_json() if request.is_json else request.form.to_dict()
+
+    email = data.get("email", "").strip().lower()
+    workspace_id = data.get("workspace_id")
+    workspace_role = data.get("workspace_role", "user")
+    name = data.get("name", "").strip()
+
+    if not email or not is_valid_email(email):
+        if request.is_json:
+            return jsonify({"error": "Valid email is required"}), 400
+        flash("Valid email is required", "error")
+        return redirect(url_for("invitations.list_invitations"))
+
+    if not workspace_id:
+        if request.is_json:
+            return jsonify({"error": "Workspace is required"}), 400
+        flash("Workspace is required", "error")
+        return redirect(url_for("invitations.list_invitations"))
+
+    invitation, error = InvitationService.create_invitation(
+        workspace_id=workspace_id,
+        email=email,
+        workspace_role=workspace_role,
+        invited_by_user=current_user,
+        name=name
+    )
+
+    if error:
+        if request.is_json:
+            return jsonify({"error": error}), 400
+        flash(error, "error")
+        return redirect(url_for("invitations.list_invitations"))
+
+    if request.is_json:
+        return jsonify({
+            "message": f"Invitation sent to {email}",
+            "invitation": invitation.to_dict()
+        }), 201
+
+    flash(f"Invitation sent to {email}", "success")
+    return redirect(url_for("invitations.list_invitations"))

@@ -3,8 +3,8 @@ Flask Application Factory - Firestore Version
 Creates and configures the Flask app
 """
 import os
-from flask import Flask, render_template
-from flask_login import LoginManager
+from flask import Flask, render_template, redirect, url_for
+from flask_login import LoginManager, current_user
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -56,6 +56,8 @@ def create_app(config_name=None):
     # Home route
     @app.route("/")
     def index():
+        if current_user.is_authenticated:
+            return redirect(url_for("dashboard.index"))
         return render_template("index.html")
     
     # Health check for Cloud Run
