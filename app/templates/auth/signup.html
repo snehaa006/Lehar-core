@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - Lehar Core{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-2xl w-full">
+        <!-- Logo and Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-2xl mb-4">
+                <span class="text-white font-bold text-2xl">L</span>
+            </div>
+            <h1 class="text-3xl font-bold text-text-primary">Create your organization</h1>
+            <p class="text-text-muted mt-2">Set up your organization and first workspace</p>
+        </div>
+
+        <!-- Signup Form -->
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-8">
+            <form method="POST" action="{{ url_for('auth.signup') }}" class="space-y-8">
+                <!-- Organization Details Section -->
+                <div>
+                    <h3 class="text-lg font-semibold text-cyan-bright mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-cyan-dark/20 rounded-lg flex items-center justify-center mr-3 text-sm">1</span>
+                        Organization Details
+                    </h3>
+                    <div class="space-y-4 pl-11">
+                        <div>
+                            <label for="company_name" class="block text-sm font-medium text-text-secondary mb-2">Company Name *</label>
+                            <input type="text" id="company_name" name="company_name"
+                                   value="{{ form_data.company_name if form_data else '' }}"
+                                   class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted {% if errors and errors.company_name %}border-red-500{% endif %}"
+                                   placeholder="Your Company Name" required>
+                            {% if errors and errors.company_name %}
+                            <p class="mt-1 text-sm text-red-400">{{ errors.company_name }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="industry_type" class="block text-sm font-medium text-text-secondary mb-2">Industry Type</label>
+                                <select id="industry_type" name="industry_type"
+                                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary">
+                                    <option value="">Select Industry</option>
+                                    <option value="Manufacturing">Manufacturing</option>
+                                    <option value="Textile">Textile</option>
+                                    <option value="Automotive">Automotive</option>
+                                    <option value="Food Processing">Food Processing</option>
+                                    <option value="Pharmaceuticals">Pharmaceuticals</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="company_size" class="block text-sm font-medium text-text-secondary mb-2">Company Size</label>
+                                <select id="company_size" name="company_size"
+                                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary">
+                                    <option value="">Select Size</option>
+                                    <option value="1-50">1-50 employees</option>
+                                    <option value="50-200">50-200 employees</option>
+                                    <option value="200-500">200-500 employees</option>
+                                    <option value="500+">500+ employees</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- First Workspace Section -->
+                <div>
+                    <h3 class="text-lg font-semibold text-cyan-bright mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-cyan-dark/20 rounded-lg flex items-center justify-center mr-3 text-sm">2</span>
+                        First Workspace
+                    </h3>
+                    <div class="space-y-4 pl-11">
+                        <div>
+                            <label for="workspace_name" class="block text-sm font-medium text-text-secondary mb-2">Workspace Name *</label>
+                            <input type="text" id="workspace_name" name="workspace_name"
+                                   value="{{ form_data.workspace_name if form_data else '' }}"
+                                   class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted {% if errors and errors.workspace_name %}border-red-500{% endif %}"
+                                   placeholder="e.g., Main Plant, Engineering, HR" required>
+                            {% if errors and errors.workspace_name %}
+                            <p class="mt-1 text-sm text-red-400">{{ errors.workspace_name }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-sm text-text-muted">This is your first operational unit. You can create more later.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="workspace_type" class="block text-sm font-medium text-text-secondary mb-2">Workspace Type</label>
+                                <select id="workspace_type" name="workspace_type"
+                                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary">
+                                    <option value="general">General</option>
+                                    <option value="manufacturing">Manufacturing</option>
+                                    <option value="hr">HR</option>
+                                    <option value="engineering">Engineering</option>
+                                    <option value="inventory">Inventory</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="workspace_description" class="block text-sm font-medium text-text-secondary mb-2">Description (Optional)</label>
+                                <input type="text" id="workspace_description" name="workspace_description"
+                                       value="{{ form_data.workspace_description if form_data else '' }}"
+                                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted"
+                                       placeholder="Brief description">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Account Section -->
+                <div>
+                    <h3 class="text-lg font-semibold text-cyan-bright mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-cyan-dark/20 rounded-lg flex items-center justify-center mr-3 text-sm">3</span>
+                        Your Account
+                    </h3>
+                    <div class="space-y-4 pl-11">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-text-secondary mb-2">Full Name *</label>
+                                <input type="text" id="name" name="name"
+                                       value="{{ form_data.name if form_data else '' }}"
+                                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted {% if errors and errors.name %}border-red-500{% endif %}"
+                                       placeholder="Your full name" required>
+                                {% if errors and errors.name %}
+                                <p class="mt-1 text-sm text-red-400">{{ errors.name }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-text-secondary mb-2">Work Email *</label>
+                                <input type="email" id="email" name="email"
+                                       value="{{ form_data.email if form_data else '' }}"
+                                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted {% if errors and errors.email %}border-red-500{% endif %}"
+                                       placeholder="you@company.com" required>
+                                {% if errors and errors.email %}
+                                <p class="mt-1 text-sm text-red-400">{{ errors.email }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-text-secondary mb-2">Password *</label>
+                                <input type="password" id="password" name="password"
+                                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted {% if errors and errors.password %}border-red-500{% endif %}"
+                                       placeholder="Min 8 chars" required>
+                                {% if errors and errors.password %}
+                                <p class="mt-1 text-sm text-red-400">{{ errors.password }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-sm text-text-muted">Min 8 chars, 1 uppercase, 1 lowercase, 1 digit</p>
+                            </div>
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-text-secondary mb-2">Phone Number</label>
+                                <input type="tel" id="phone" name="phone"
+                                       value="{{ form_data.phone if form_data else '' }}"
+                                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted {% if errors and errors.phone %}border-red-500{% endif %}"
+                                       placeholder="+91 XXXXXXXXXX">
+                                {% if errors and errors.phone %}
+                                <p class="mt-1 text-sm text-red-400">{{ errors.phone }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="pt-4">
+                    <button type="submit" class="w-full btn-primary py-4 px-4 rounded-lg text-white font-semibold text-lg">
+                        Create Organization & Workspace
+                    </button>
+                </div>
+            </form>
+
+            <!-- Links -->
+            <div class="mt-6 text-center text-text-muted">
+                Already have an account?
+                <a href="{{ url_for('auth.login') }}" class="text-cyan-bright hover:text-cyan-light">Sign in</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
