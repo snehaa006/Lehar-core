@@ -1,16 +1,26 @@
 """
 User Model - Firestore Version
-Users belong to one organization and can be members of multiple workspaces
+Users can be members of multiple workspaces across organizations
+Organization membership is optional - users can exist without belonging to any organization
 """
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 import uuid
+import enum
 
 from app.database.base_repository import BaseRepository
-from app.models.organization import OrgRole
 from google.cloud.firestore_v1 import FieldFilter
+
+
+# OrgRole enum - duplicated here to avoid circular imports
+# The canonical definition is in organization.py
+class OrgRole(enum.Enum):
+    """Organization-level roles"""
+    ORG_OWNER = "org_owner"
+    ORG_ADMIN = "org_admin"
+    MEMBER = "member"
 
 
 class UserRepository(BaseRepository):
@@ -78,12 +88,20 @@ class User(UserMixin):
     def __init__(self, data: Dict[str, Any]):
         """Initialize user from Firestore document data"""
         self.id = data.get('id')
-        self.organization_id = data.get('organization_id')
+        self.organization_id = data.get('organization_id')  # Now optional
         self.name = data.get('name')
         self.email = data.get('email')
         self.password_hash = data.get('password_hash')
         self.phone = data.get('phone')
-        self.org_role = OrgRole(data.get('org_role', 'member'))
+        # org_role is optional - only relevant if user belongs to an organization
+        org_role_value = data.get('org_role')
+        if org_role_value:
+            try:
+                self.org_role = OrgRole(org_role_value)
+            except ValueError:
+                self.org_role = OrgRole.MEMBER
+        else:
+            self.org_role = None
         self.job_title = data.get('job_title')
         self.is_email_verified = data.get('is_email_verified', False)
         self.email_verification_token = data.get('email_verification_token')
@@ -91,28 +109,30 @@ class User(UserMixin):
         self.created_at = data.get('created_at')
         self.last_login = data.get('last_login')
         self.updated_at = data.get('updated_at')
+        self.last_workspace_id = data.get('last_workspace_id')  # Track last used workspace
 
         # Cache organization data if included
         self._organization_data = data.get('_organization')
 
     @classmethod
-    def create(cls, organization_id: str, name: str, email: str, password: str,
-               org_role: str = 'member', **kwargs) -> 'User':
-        """Create a new user"""
+    def create(cls, name: str, email: str, password: str,
+               organization_id: str = None, org_role: str = None, **kwargs) -> 'User':
+        """Create a new user - organization_id is now optional"""
         user_id = str(uuid.uuid4())
 
         data = {
-            'organization_id': organization_id,
+            'organization_id': organization_id,  # Can be None
             'name': name,
             'email': email.lower(),
             'password_hash': generate_password_hash(password),
-            'org_role': org_role,
+            'org_role': org_role,  # Can be None if no organization
             'phone': kwargs.get('phone'),
             'job_title': kwargs.get('job_title'),
             'is_email_verified': kwargs.get('is_email_verified', False),
             'email_verification_token': kwargs.get('email_verification_token'),
             'is_active': kwargs.get('is_active', True),
-            'last_login': None
+            'last_login': None,
+            'last_workspace_id': kwargs.get('last_workspace_id')  # Track last used workspace
         }
 
         created_data = cls.repository.create(user_id, data)
@@ -154,7 +174,9 @@ class User(UserMixin):
             'is_email_verified': self.is_email_verified,
             'email_verification_token': self.email_verification_token,
             'is_active': self._is_active,
-            'last_login': self.last_login
+            'last_login': self.last_login,
+            'last_workspace_id': self.last_workspace_id,
+            'organization_id': self.organization_id
         }
 
         return self.repository.update(self.id, data)
@@ -173,11 +195,28 @@ class User(UserMixin):
 
     @property
     def organization(self):
-        """Get organization (lazy loaded)"""
+        """Get organization (lazy loaded) - returns None if user has no organization"""
+        if not self.organization_id:
+            return None
         if not hasattr(self, '_organization_obj'):
             from app.models.organization import Organization
             self._organization_obj = Organization.get_by_id(self.organization_id)
         return self._organization_obj
+
+    @property
+    def last_workspace(self):
+        """Get last used workspace (lazy loaded)"""
+        if not self.last_workspace_id:
+            return None
+        if not hasattr(self, '_last_workspace_obj'):
+            from app.models.workspace import Workspace
+            self._last_workspace_obj = Workspace.get_by_id(self.last_workspace_id)
+        return self._last_workspace_obj
+
+    def set_last_workspace(self, workspace_id: str) -> bool:
+        """Update last used workspace and save"""
+        self.last_workspace_id = workspace_id
+        return self.save()
 
     @property
     def workspace_memberships(self) -> List:
@@ -195,19 +234,28 @@ class User(UserMixin):
 
     def is_org_owner(self) -> bool:
         """Check if user is organization owner"""
+        if not self.org_role:
+            return False
         return self.org_role == OrgRole.ORG_OWNER
 
     def is_org_admin(self) -> bool:
         """Check if user is organization admin or owner"""
+        if not self.org_role:
+            return False
         return self.org_role in [OrgRole.ORG_OWNER, OrgRole.ORG_ADMIN]
 
     def can_manage_workspaces(self) -> bool:
-        """Check if user can create/manage workspaces"""
-        return self.is_org_admin()
+        """Check if user can create/manage workspaces - any user can create workspaces now"""
+        return True  # Anyone can create workspaces
 
     def can_invite_users(self) -> bool:
         """Check if user can invite users to organization"""
         return self.is_org_admin()
+
+    def is_workspace_admin(self, workspace_id: str) -> bool:
+        """Check if user is admin of a specific workspace"""
+        from app.models.workspace_membership import WorkspaceMembership
+        return WorkspaceMembership.user_is_workspace_admin(self.id, workspace_id)
 
     def to_dict(self, include_org: bool = False) -> Dict[str, Any]:
         """Convert to dictionary for JSON responses"""
@@ -219,6 +267,7 @@ class User(UserMixin):
             "job_title": self.job_title,
             "is_active": self.is_active,
             "is_email_verified": self.is_email_verified,
+            "last_workspace_id": self.last_workspace_id,
             "created_at": self.created_at.isoformat() if isinstance(self.created_at, datetime) else self.created_at,
             "last_login": self.last_login.isoformat() if self.last_login and isinstance(self.last_login, datetime) else self.last_login
         }
@@ -249,4 +298,5 @@ class User(UserMixin):
         return self._is_active
 
     def __repr__(self):
-        return f"<User {self.email} ({self.org_role.value if isinstance(self.org_role, OrgRole) else self.org_role})>"
+        role_str = self.org_role.value if isinstance(self.org_role, OrgRole) else (self.org_role or 'no-org')
+        return f"<User {self.email} ({role_str})>"

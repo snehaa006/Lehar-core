@@ -23,7 +23,7 @@
                     <input type="email" id="email" name="email"
                            value="{{ form_data.email if form_data else '' }}"
                            class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright"
-                           placeholder="you@company.com" required>
+                           placeholder="you@example.com" required>
                 </div>
 
                 <!-- Password -->
@@ -58,15 +58,10 @@
                 </div>
             </div>
 
-            <!-- Sign up links -->
-            <div class="space-y-3">
-                <a href="{{ url_for('auth.discover_workspaces') }}" class="block w-full py-3 px-4 text-center border border-cyan-bright text-cyan-bright rounded-lg hover:bg-cyan-bright hover:text-dark-bg transition-colors">
-                    Find your workspace
-                </a>
-                <a href="{{ url_for('auth.signup') }}" class="block w-full py-3 px-4 text-center border border-dark-border text-text-secondary rounded-lg hover:border-text-secondary transition-colors">
-                    Create new organization
-                </a>
-            </div>
+            <!-- Sign up link -->
+            <a href="{{ url_for('auth.signup') }}" class="block w-full py-3 px-4 text-center border border-cyan-bright text-cyan-bright rounded-lg hover:bg-cyan-bright hover:text-dark-bg transition-colors">
+                Create an account
+            </a>
         </div>
     </div>
 </div>

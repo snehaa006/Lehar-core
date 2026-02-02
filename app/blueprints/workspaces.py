@@ -2,13 +2,139 @@
 Workspaces Blueprint
 Handles workspace management, members, and join requests
 """
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app.services import WorkspaceService, InvitationService
 from app.models import Workspace, WorkspaceMembership, JoinRequest, Invitation
-from app.utils import is_valid_email, send_invitation_email
+from app.utils import is_valid_email, send_invitation_email, sanitize_slug
 
 workspaces_bp = Blueprint("workspaces", __name__, url_prefix="/workspaces")
+
+
+@workspaces_bp.route("/selector", methods=["GET"])
+@login_required
+def workspace_selector():
+    """
+    Workspace selector page - shown after login
+    Shows user's workspaces and options to create/join
+    """
+    user_workspaces = WorkspaceService.get_user_workspaces(current_user.id)
+
+    return render_template(
+        "workspaces/selector.html",
+        workspaces=user_workspaces,
+        has_workspaces=len(user_workspaces) > 0
+    )
+
+
+@workspaces_bp.route("/join", methods=["GET", "POST"])
+@login_required
+def join_workspace():
+    """Join a workspace using its code"""
+    if request.method == "GET":
+        code = request.args.get("code", "")
+        return render_template("workspaces/join.html", form_data={"code": code})
+
+    data = request.get_json() if request.is_json else request.form.to_dict()
+    join_code = data.get("code", "").strip().upper()
+
+    if not join_code:
+        if request.is_json:
+            return jsonify({"error": "Workspace code is required"}), 400
+        flash("Workspace code is required", "error")
+        return render_template("workspaces/join.html", form_data=data)
+
+    # Find workspace by code
+    workspace = Workspace.get_by_join_code(join_code)
+    if not workspace:
+        if request.is_json:
+            return jsonify({"error": "No workspace found with this code"}), 404
+        flash("No workspace found with this code. Please check and try again.", "error")
+        return render_template("workspaces/join.html", form_data=data)
+
+    if not workspace.is_active:
+        if request.is_json:
+            return jsonify({"error": "This workspace is no longer active"}), 400
+        flash("This workspace is no longer active", "error")
+        return render_template("workspaces/join.html", form_data=data)
+
+    # Check if already a member
+    if WorkspaceMembership.user_is_workspace_member(current_user.id, workspace.id):
+        if request.is_json:
+            return jsonify({"error": "You are already a member of this workspace"}), 400
+        flash("You are already a member of this workspace", "info")
+        return redirect(url_for("workspaces.view_workspace", workspace_id=workspace.id))
+
+    # Check for existing pending request
+    existing_request = JoinRequest.get_pending_for_user(current_user.id, workspace.id)
+    if existing_request:
+        if request.is_json:
+            return jsonify({"error": "You already have a pending join request for this workspace"}), 400
+        flash("You already have a pending join request for this workspace", "info")
+        return render_template("workspaces/join.html", form_data=data, workspace=workspace)
+
+    # Show workspace preview if just searching
+    if data.get("action") == "search":
+        if request.is_json:
+            return jsonify({"workspace": workspace.to_public_dict()}), 200
+        return render_template("workspaces/join.html", form_data=data, workspace=workspace)
+
+    # Create join request
+    reason = data.get("reason", "").strip() or "I would like to join this workspace"
+    join_request, error = WorkspaceService.request_to_join_workspace(
+        user=current_user,
+        workspace_id=workspace.id,
+        reason=reason
+    )
+
+    if error:
+        if request.is_json:
+            return jsonify({"error": error}), 400
+        flash(error, "error")
+        return render_template("workspaces/join.html", form_data=data, workspace=workspace)
+
+    if request.is_json:
+        return jsonify({
+            "message": "Join request submitted successfully! A workspace admin will review your request.",
+            "request_id": join_request.id
+        }), 201
+
+    flash("Join request submitted successfully! A workspace admin will review your request.", "success")
+    return redirect(url_for("workspaces.workspace_selector"))
+
+
+@workspaces_bp.route("/switch/<workspace_id>", methods=["POST", "GET"])
+@login_required
+def switch_workspace(workspace_id):
+    """Switch to a different workspace"""
+    workspace = Workspace.get_by_id(workspace_id)
+    if not workspace:
+        if request.is_json:
+            return jsonify({"error": "Workspace not found"}), 404
+        flash("Workspace not found", "error")
+        return redirect(url_for("workspaces.workspace_selector"))
+
+    # Check if user is a member
+    if not WorkspaceMembership.user_is_workspace_member(current_user.id, workspace_id):
+        if request.is_json:
+            return jsonify({"error": "You are not a member of this workspace"}), 403
+        flash("You are not a member of this workspace", "error")
+        return redirect(url_for("workspaces.workspace_selector"))
+
+    # Update last workspace
+    current_user.set_last_workspace(workspace_id)
+
+    # Store in session too for quick access
+    session['current_workspace_id'] = workspace_id
+
+    if request.is_json:
+        return jsonify({
+            "message": f"Switched to {workspace.name}",
+            "workspace": workspace.to_dict()
+        }), 200
+
+    flash(f"Switched to {workspace.name}", "success")
+    return redirect(url_for("dashboard.index"))
 
 
 @workspaces_bp.route("/", methods=["GET"])
@@ -17,27 +143,18 @@ def list_workspaces():
     """List all workspaces user has access to"""
     user_workspaces = WorkspaceService.get_user_workspaces(current_user.id)
 
-    # Get all organization workspaces for org admins
-    org_workspaces = []
-    if current_user.is_org_admin():
-        org_workspaces = WorkspaceService.get_organization_workspaces(current_user.organization_id)
-
     return render_template(
         "workspaces/list.html",
         user_workspaces=user_workspaces,
-        org_workspaces=org_workspaces,
-        is_org_admin=current_user.is_org_admin()
+        org_workspaces=[],  # No longer used, kept for template compatibility
+        is_org_admin=False  # No longer relevant
     )
 
 
 @workspaces_bp.route("/create", methods=["GET", "POST"])
 @login_required
 def create_workspace():
-    """Create a new workspace"""
-    if not current_user.can_manage_workspaces():
-        flash("You don't have permission to create workspaces", "error")
-        return redirect(url_for("workspaces.list_workspaces"))
-
+    """Create a new workspace with optional organization details"""
     if request.method == "GET":
         return render_template("workspaces/create.html")
 
@@ -50,12 +167,17 @@ def create_workspace():
         flash("Workspace name is required", "error")
         return render_template("workspaces/create.html", form_data=data)
 
+    # Create workspace with optional org details
     workspace, error = WorkspaceService.create_workspace(
-        organization_id=current_user.organization_id,
         name=name,
         created_by_user=current_user,
         description=data.get("description"),
-        workspace_type=data.get("workspace_type", "general")
+        workspace_type=data.get("workspace_type", "general"),
+        # Organization details (optional, for display purposes)
+        org_name=data.get("org_name", "").strip() or None,
+        org_industry=data.get("org_industry", "").strip() or None,
+        org_size=data.get("org_size", "").strip() or None,
+        org_website=data.get("org_website", "").strip() or None
     )
 
     if error:
@@ -67,10 +189,11 @@ def create_workspace():
     if request.is_json:
         return jsonify({
             "message": "Workspace created successfully",
-            "workspace": workspace.to_dict()
+            "workspace": workspace.to_dict(),
+            "join_code": workspace.join_code
         }), 201
 
-    flash(f"Workspace '{workspace.name}' created successfully!", "success")
+    flash(f"Workspace '{workspace.name}' created! Share code {workspace.join_code} to invite others.", "success")
     return redirect(url_for("workspaces.view_workspace", workspace_id=workspace.id))
 
 
@@ -81,16 +204,18 @@ def view_workspace(workspace_id):
     workspace = Workspace.get_by_id(workspace_id)
     if not workspace:
         flash("Workspace not found", "error")
-        return redirect(url_for("workspaces.list_workspaces"))
+        return redirect(url_for("workspaces.workspace_selector"))
 
-    # Check access
+    # Check access - must be a member
     is_member = WorkspaceMembership.user_is_workspace_member(current_user.id, workspace_id)
     is_admin = WorkspaceMembership.user_is_workspace_admin(current_user.id, workspace_id)
-    is_org_admin = current_user.is_org_admin()
 
-    if not is_member and not is_org_admin:
+    if not is_member:
         flash("You don't have access to this workspace", "error")
-        return redirect(url_for("workspaces.list_workspaces"))
+        return redirect(url_for("workspaces.workspace_selector"))
+
+    # Update last workspace
+    current_user.set_last_workspace(workspace_id)
 
     # Get workspace members
     members = WorkspaceMembership.get_workspace_members(workspace_id)
@@ -98,7 +223,7 @@ def view_workspace(workspace_id):
     # Get pending invitations and join requests for admins
     pending_invitations = []
     pending_requests = []
-    if is_admin or is_org_admin:
+    if is_admin:
         pending_invitations = InvitationService.get_workspace_invitations(workspace_id, status='pending')
         pending_requests = WorkspaceService.get_pending_join_requests(workspace_id)
 
@@ -109,7 +234,7 @@ def view_workspace(workspace_id):
         pending_invitations=pending_invitations,
         pending_requests=pending_requests,
         is_admin=is_admin,
-        is_org_admin=is_org_admin
+        is_org_admin=False  # Kept for template compatibility
     )
 
 

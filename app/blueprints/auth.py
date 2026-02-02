@@ -16,12 +16,11 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @auth_bp.route("/signup", methods=["GET", "POST"])
 def signup():
-    """Organization registration page with workspace creation"""
+    """Simple user registration - just name, email, password"""
     if current_user.is_authenticated:
-        return redirect(url_for("dashboard.index"))
+        return redirect(url_for("workspaces.workspace_selector"))
 
     if request.method == "GET":
-        # Check if coming from workspace discovery
         email = request.args.get("email", "")
         return render_template("auth/signup.html", errors={}, form_data={"email": email})
 
@@ -31,75 +30,30 @@ def signup():
     # Validate inputs
     errors = {}
 
-    # Organization data
-    org_name = data.get("company_name", "").strip()
-    if not org_name:
-        errors["company_name"] = "Company name is required"
-
-    # Admin data
-    admin_email = data.get("email", "").strip().lower()
-    if not is_valid_email(admin_email):
+    # User data
+    email = data.get("email", "").strip().lower()
+    if not is_valid_email(email):
         errors["email"] = "Invalid email address"
 
-    admin_password = data.get("password", "")
-    is_strong, password_msg = is_strong_password(admin_password)
+    password = data.get("password", "")
+    is_strong, password_msg = is_strong_password(password)
     if not is_strong:
         errors["password"] = password_msg
 
-    admin_name = data.get("name", "").strip()
-    if not admin_name:
+    name = data.get("name", "").strip()
+    if not name:
         errors["name"] = "Name is required"
-
-    phone = data.get("phone")
-    if phone and not validate_phone(phone):
-        errors["phone"] = "Invalid phone number"
-
-    # Workspace data
-    workspace_name = data.get("workspace_name", "").strip()
-    if not workspace_name:
-        errors["workspace_name"] = "Workspace name is required"
 
     if errors:
         if request.is_json:
             return jsonify({"errors": errors}), 400
         return render_template("auth/signup.html", errors=errors, form_data=data)
 
-    # Check if domain already has an organization (for work emails only)
-    if is_work_email(admin_email):
-        domain = extract_domain_from_email(admin_email)
-        existing_org = OrganizationService.get_organization_by_domain(domain)
-        if existing_org:
-            error = f"Organization with domain {domain} already exists. Please request to join an existing workspace or contact your admin."
-            if request.is_json:
-                return jsonify({"error": error, "redirect": url_for("auth.discover_workspaces", email=admin_email)}), 400
-            flash(error, "error")
-            return redirect(url_for("auth.discover_workspaces", email=admin_email))
-
-    # Create organization, admin user, and first workspace
-    org_data = {
-        "name": org_name,
-        "website": data.get("website"),
-        "industry_type": data.get("industry_type"),
-        "company_size": data.get("company_size"),
-        "country": data.get("country")
-    }
-
-    admin_data = {
-        "name": admin_name,
-        "email": admin_email,
-        "password": admin_password,
-        "phone": phone,
-        "job_title": data.get("job_title")
-    }
-
-    workspace_data = {
-        "name": workspace_name,
-        "description": data.get("workspace_description"),
-        "workspace_type": data.get("workspace_type", "general")
-    }
-
-    organization, admin_user, workspace, error = OrganizationService.create_organization_with_workspace(
-        org_data, admin_data, workspace_data
+    # Create user (no organization required)
+    user, error = UserService.create_user(
+        name=name,
+        email=email,
+        password=password
     )
 
     if error:
@@ -110,17 +64,15 @@ def signup():
 
     # Send verification email
     send_verification_email(
-        user_email=admin_user.email,
-        user_name=admin_user.name,
-        verification_token=admin_user.email_verification_token
+        user_email=user.email,
+        user_name=user.name,
+        verification_token=user.email_verification_token
     )
 
     if request.is_json:
         return jsonify({
             "message": "Registration successful! Please check your email to verify your account.",
-            "organization_id": organization.id,
-            "user_id": admin_user.id,
-            "workspace_id": workspace.id
+            "user_id": user.id
         }), 201
 
     flash("Registration successful! Please check your email to verify your account.", "success")
@@ -203,7 +155,10 @@ def discover_workspaces():
 def login():
     """User login page"""
     if current_user.is_authenticated:
-        return redirect(url_for("dashboard.index"))
+        # Redirect to last workspace or workspace selector
+        if current_user.last_workspace_id:
+            return redirect(url_for("dashboard.index"))
+        return redirect(url_for("workspaces.workspace_selector"))
 
     if request.method == "GET":
         return render_template("auth/login.html")
@@ -235,18 +190,20 @@ def login():
 
     if request.is_json:
         # For API calls, also return JWT token
+        org_role_value = user.org_role.value if user.org_role else None
+        plan_type_value = user.organization.plan_type.value if user.organization else 'free'
         access_token = generate_access_token(
             user_id=user.id,
             organization_id=user.organization_id,
-            org_role=user.org_role.value,
-            plan_type=user.organization.plan_type.value
+            org_role=org_role_value,
+            plan_type=plan_type_value
         )
         return jsonify({
             "access_token": access_token,
             "user": user.to_dict(include_org=True)
         }), 200
 
-    # For web interface, redirect to dashboard
+    # For web interface
     flash(f"Welcome back, {user.name}!", "success")
 
     # Redirect to next page if specified
@@ -254,7 +211,11 @@ def login():
     if next_page:
         return redirect(next_page)
 
-    return redirect(url_for("dashboard.index"))
+    # Redirect to last workspace or workspace selector
+    if user.last_workspace_id:
+        return redirect(url_for("dashboard.index"))
+
+    return redirect(url_for("workspaces.workspace_selector"))
 
 
 @auth_bp.route("/verify-email", methods=["GET"])

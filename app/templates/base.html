@@ -97,38 +97,82 @@
     <nav class="bg-dark-card border-b border-dark-border">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
-                <div class="flex items-center">
+                <div class="flex items-center space-x-4">
                     <a href="{{ url_for('dashboard.index') }}" class="flex items-center space-x-2">
                         <div class="w-8 h-8 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-lg flex items-center justify-center">
                             <span class="text-white font-bold text-sm">L</span>
                         </div>
                         <span class="text-xl font-semibold text-text-primary">Lehar Core</span>
                     </a>
+
+                    <!-- Workspace Switcher -->
+                    {% if current_user.last_workspace_id and current_user.last_workspace %}
+                    <div class="hidden md:flex items-center">
+                        <span class="text-text-muted mx-2">/</span>
+                        <div class="relative" id="workspace-switcher">
+                            <button onclick="document.getElementById('workspace-dropdown').classList.toggle('hidden')"
+                                    class="flex items-center space-x-2 px-3 py-1.5 bg-dark-bg border border-dark-border rounded-lg hover:border-cyan-bright transition-colors">
+                                <span class="text-text-primary font-medium">{{ current_user.last_workspace.name }}</span>
+                                <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <!-- Dropdown menu -->
+                            <div id="workspace-dropdown" class="hidden absolute left-0 mt-2 w-64 bg-dark-card border border-dark-border rounded-lg shadow-lg z-50">
+                                <div class="py-2">
+                                    <div class="px-4 py-2 text-xs text-text-muted uppercase tracking-wider">Your Workspaces</div>
+                                    {% for item in current_user.workspaces[:5] %}
+                                    <a href="{{ url_for('workspaces.switch_workspace', workspace_id=item.id) }}"
+                                       class="block px-4 py-2 text-text-secondary hover:bg-dark-bg hover:text-cyan-bright transition-colors {% if item.id == current_user.last_workspace_id %}bg-cyan-dark/10 text-cyan-bright{% endif %}">
+                                        <div class="flex items-center justify-between">
+                                            <span>{{ item.name }}</span>
+                                            {% if item.id == current_user.last_workspace_id %}
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                            </svg>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                    {% endfor %}
+                                    <div class="border-t border-dark-border my-2"></div>
+                                    <a href="{{ url_for('workspaces.workspace_selector') }}" class="block px-4 py-2 text-cyan-bright hover:bg-dark-bg transition-colors">
+                                        View all workspaces
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="flex items-center space-x-6">
                     <a href="{{ url_for('dashboard.index') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Dashboard</a>
                     <a href="{{ url_for('workspaces.list_workspaces') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Workspaces</a>
-                    {% if current_user.is_org_admin() %}
-                    <a href="{{ url_for('dashboard.organization_settings') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Organization</a>
-                    {% endif %}
 
-                    <!-- User dropdown -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button class="flex items-center space-x-2 text-text-secondary hover:text-cyan-bright transition-colors">
-                            <div class="w-8 h-8 bg-dark-border rounded-full flex items-center justify-center">
-                                <span class="text-sm font-medium">{{ current_user.name[0].upper() }}</span>
-                            </div>
-                            <span class="hidden md:block">{{ current_user.name }}</span>
-                        </button>
+                    <!-- User info and logout -->
+                    <div class="flex items-center space-x-2 text-text-secondary">
+                        <div class="w-8 h-8 bg-dark-border rounded-full flex items-center justify-center">
+                            <span class="text-sm font-medium">{{ current_user.name[0].upper() }}</span>
+                        </div>
+                        <span class="hidden md:block">{{ current_user.name }}</span>
                     </div>
 
-                    <a href="{{ url_for('dashboard.profile') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Profile</a>
                     <a href="{{ url_for('auth.logout') }}" class="px-4 py-2 bg-dark-border hover:bg-cyan-dark text-text-primary rounded-lg transition-colors">Logout</a>
                 </div>
             </div>
         </div>
     </nav>
+
+    <!-- Close dropdown when clicking outside -->
+    <script>
+        document.addEventListener('click', function(event) {
+            var dropdown = document.getElementById('workspace-dropdown');
+            var switcher = document.getElementById('workspace-switcher');
+            if (dropdown && switcher && !switcher.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
     {% endif %}
 
     <!-- Flash Messages -->

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Join Workspace - Lehar Core{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-md w-full">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <a href="{{ url_for('workspaces.workspace_selector') }}" class="inline-flex items-center text-text-muted hover:text-cyan-bright mb-4">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to workspaces
+            </a>
+            <h1 class="text-3xl font-bold text-text-primary">Join a Workspace</h1>
+            <p class="text-text-muted mt-2">Enter the workspace code to request access</p>
+        </div>
+
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-8">
+            {% if workspace %}
+            <!-- Workspace Found - Show Details and Join Form -->
+            <div class="mb-6 p-4 bg-dark-bg border border-cyan-bright/30 rounded-xl">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-xl flex items-center justify-center">
+                        <span class="text-white text-xl font-bold">{{ workspace.name[0].upper() }}</span>
+                    </div>
+                    <div>
+                        <h3 class="text-text-primary font-semibold text-lg">{{ workspace.name }}</h3>
+                        <p class="text-text-muted text-sm">
+                            {% if workspace.org_name %}{{ workspace.org_name }} &middot; {% endif %}
+                            {{ workspace.workspace_type.value | title }}
+                        </p>
+                    </div>
+                </div>
+                {% if workspace.description %}
+                <p class="text-text-secondary text-sm mb-3">{{ workspace.description }}</p>
+                {% endif %}
+                <div class="flex items-center space-x-4 text-sm text-text-muted">
+                    <span>{{ workspace.member_count }} member(s)</span>
+                    {% if workspace.is_domain_verified %}
+                    <span class="flex items-center text-green-400">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Verified
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('workspaces.join_workspace') }}" class="space-y-6">
+                <input type="hidden" name="code" value="{{ form_data.code }}">
+
+                <div>
+                    <label for="reason" class="block text-sm font-medium text-text-secondary mb-2">
+                        Why do you want to join? (Optional)
+                    </label>
+                    <textarea id="reason" name="reason" rows="3"
+                              class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright"
+                              placeholder="I'm part of the team and would like to collaborate...">{{ form_data.reason if form_data and form_data.reason else '' }}</textarea>
+                </div>
+
+                <button type="submit" class="w-full btn-primary py-3 px-4 rounded-lg text-white font-semibold">
+                    Request to Join
+                </button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('workspaces.join_workspace') }}" class="text-text-muted hover:text-cyan-bright text-sm">
+                    Try a different code
+                </a>
+            </div>
+
+            {% else %}
+            <!-- Search Form -->
+            <form method="POST" action="{{ url_for('workspaces.join_workspace') }}" class="space-y-6">
+                <div>
+                    <label for="code" class="block text-sm font-medium text-text-secondary mb-2">Workspace Code</label>
+                    <input type="text" id="code" name="code"
+                           value="{{ form_data.code if form_data else '' }}"
+                           class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright text-center text-lg tracking-wider uppercase"
+                           placeholder="ABC-123" required
+                           pattern="[A-Za-z]{3}-[0-9]{3}"
+                           title="Enter code in format ABC-123">
+                    <p class="mt-2 text-sm text-text-muted text-center">
+                        Ask the workspace admin for the code
+                    </p>
+                </div>
+
+                <input type="hidden" name="action" value="search">
+
+                <button type="submit" class="w-full btn-primary py-3 px-4 rounded-lg text-white font-semibold">
+                    Find Workspace
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Help Text -->
+        <div class="text-center mt-6 text-text-muted text-sm">
+            <p>Don't have a code? Ask the workspace admin to invite you or share their code.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -13,48 +13,56 @@ class WorkspaceService:
     """Handles workspace-related business logic"""
 
     @staticmethod
-    def create_workspace(organization_id: str, name: str, created_by_user, **kwargs):
+    def create_workspace(name: str, created_by_user, organization_id: str = None, **kwargs):
         """
-        Create a new workspace
+        Create a new workspace - organization is now optional
 
         Args:
-            organization_id: Organization ID
             name: Workspace name
             created_by_user: User creating the workspace
-            **kwargs: Additional workspace fields
+            organization_id: Optional organization ID (for backward compatibility)
+            **kwargs: Additional workspace fields including org details
 
         Returns:
             tuple: (workspace, error_message)
         """
         try:
-            # Check if user can create workspaces
+            # Any user can create workspaces now
             if not created_by_user.can_manage_workspaces():
                 return None, "You don't have permission to create workspaces"
 
-            # Check organization limit
-            organization = Organization.get_by_id(organization_id)
-            if not organization:
-                return None, "Organization not found"
-
-            if not organization.can_add_workspace():
-                return None, f"Organization has reached maximum number of workspaces ({organization.max_workspaces})"
+            # If organization_id provided, check limits (backward compatibility)
+            if organization_id:
+                organization = Organization.get_by_id(organization_id)
+                if organization and not organization.can_add_workspace():
+                    return None, f"Organization has reached maximum number of workspaces ({organization.max_workspaces})"
 
             # Create unique slug
             slug = sanitize_slug(name)
             base_slug = slug
             counter = 1
-            while Workspace.get_by_slug(organization_id, slug):
+            # For slug uniqueness, we check globally now since org is optional
+            existing = Workspace.get_by_id(slug)  # Simple check
+            while existing:
                 slug = f"{base_slug}-{counter}"
                 counter += 1
+                existing = Workspace.get_by_id(slug)
 
-            # Create workspace
+            # Create workspace with optional org details
             workspace = Workspace.create(
-                organization_id=organization_id,
                 name=name,
                 slug=slug,
+                organization_id=organization_id,
                 description=kwargs.get('description'),
                 workspace_type=kwargs.get('workspace_type', 'general'),
-                created_by_user_id=created_by_user.id
+                created_by_user_id=created_by_user.id,
+                # Organization details stored on workspace
+                org_name=kwargs.get('org_name'),
+                org_industry=kwargs.get('org_industry'),
+                org_size=kwargs.get('org_size'),
+                org_website=kwargs.get('org_website'),
+                is_domain_verified=kwargs.get('is_domain_verified', False),
+                verified_domain=kwargs.get('verified_domain')
             )
 
             # Add creator as workspace admin
@@ -64,6 +72,9 @@ class WorkspaceService:
                 workspace_role='admin',
                 added_by_user_id=created_by_user.id
             )
+
+            # Set this as user's last workspace
+            created_by_user.set_last_workspace(workspace.id)
 
             return workspace, None
 
@@ -242,6 +253,16 @@ class WorkspaceService:
             return None, str(e)
 
     @staticmethod
+    def request_to_join_workspace(user, workspace_id: str, reason: str):
+        """
+        Wrapper method for join request using user object
+
+        Returns:
+            tuple: (join_request, error_message)
+        """
+        return WorkspaceService.request_to_join(user.id, workspace_id, reason)
+
+    @staticmethod
     def approve_join_request(request_id: str, approved_by_user, workspace_role: str = 'user'):
         """
         Approve a join request
@@ -257,19 +278,14 @@ class WorkspaceService:
             if join_request.status.value != 'pending':
                 return False, "This request has already been processed"
 
-            # Check if approving user has permission
+            # Check if approving user has permission (workspace admin)
             is_workspace_admin = WorkspaceMembership.user_is_workspace_admin(
                 approved_by_user.id, join_request.workspace_id
             )
-            if not is_workspace_admin and not approved_by_user.is_org_admin():
+            if not is_workspace_admin:
                 return False, "You don't have permission to approve join requests"
 
-            # Check if requesting user is in same organization
-            requesting_user = User.get_by_id(join_request.user_id)
-            workspace = Workspace.get_by_id(join_request.workspace_id)
-
-            if requesting_user.organization_id != workspace.organization_id:
-                return False, "User must be in the same organization"
+            # No longer checking organization - users can join workspaces across organizations
 
             # Approve request
             join_request.approve(approved_by_user.id)

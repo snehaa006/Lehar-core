@@ -159,6 +159,11 @@ class JoinRequest:
         return cls(data) if data else None
 
     @classmethod
+    def get_pending_for_user(cls, user_id: str, workspace_id: str) -> Optional['JoinRequest']:
+        """Alias for get_pending_request"""
+        return cls.get_pending_request(user_id, workspace_id)
+
+    @classmethod
     def get_workspace_requests(cls, workspace_id: str, status: Optional[str] = None) -> List['JoinRequest']:
         """Get all join requests for a workspace"""
         data_list = cls.repository.get_workspace_requests(workspace_id, status)

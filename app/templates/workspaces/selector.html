@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Select Workspace - Lehar Core{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-2xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-2xl mb-4">
+                <span class="text-white font-bold text-2xl">L</span>
+            </div>
+            <h1 class="text-3xl font-bold text-text-primary">Welcome, {{ current_user.name }}!</h1>
+            <p class="text-text-muted mt-2">Select a workspace or create a new one</p>
+        </div>
+
+        {% if has_workspaces %}
+        <!-- Existing Workspaces -->
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-6 mb-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Your Workspaces</h2>
+            <div class="space-y-3">
+                {% for item in workspaces %}
+                {% set workspace = item.workspace %}
+                {% set role = item.role %}
+                <a href="{{ url_for('workspaces.switch_workspace', workspace_id=workspace.id) }}"
+                   class="block p-4 bg-dark-bg border border-dark-border rounded-xl hover:border-cyan-bright transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-xl flex items-center justify-center">
+                                <span class="text-white text-lg font-bold">{{ workspace.name[0].upper() }}</span>
+                            </div>
+                            <div>
+                                <h3 class="text-text-primary font-medium">{{ workspace.name }}</h3>
+                                <p class="text-text-muted text-sm">
+                                    {% if workspace.org_name %}{{ workspace.org_name }} &middot; {% endif %}
+                                    {{ workspace.workspace_type.value | title }}
+                                    &middot; {{ workspace.member_count }} member(s)
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="px-2 py-1 text-xs rounded-full bg-cyan-dark/20 text-cyan-bright">
+                                {{ role.value | title }}
+                            </span>
+                            <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-6">
+            {% if not has_workspaces %}
+            <div class="text-center mb-6">
+                <svg class="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <h3 class="text-text-primary font-medium mb-2">No workspaces yet</h3>
+                <p class="text-text-muted">Create your first workspace or join an existing one</p>
+            </div>
+            {% else %}
+            <h2 class="text-lg font-semibold text-text-primary mb-4">More Options</h2>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Create Workspace -->
+                <a href="{{ url_for('workspaces.create_workspace') }}"
+                   class="flex items-center p-4 bg-dark-bg border border-dark-border rounded-xl hover:border-cyan-bright transition-colors">
+                    <div class="w-12 h-12 bg-cyan-dark/20 rounded-xl flex items-center justify-center mr-4">
+                        <svg class="w-6 h-6 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-text-primary font-medium">Create Workspace</h3>
+                        <p class="text-text-muted text-sm">Start a new workspace for your team</p>
+                    </div>
+                </a>
+
+                <!-- Join Workspace -->
+                <a href="{{ url_for('workspaces.join_workspace') }}"
+                   class="flex items-center p-4 bg-dark-bg border border-dark-border rounded-xl hover:border-cyan-bright transition-colors">
+                    <div class="w-12 h-12 bg-cyan-dark/20 rounded-xl flex items-center justify-center mr-4">
+                        <svg class="w-6 h-6 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-text-primary font-medium">Join Workspace</h3>
+                        <p class="text-text-muted text-sm">Enter a workspace code to join</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Logout -->
+        <div class="text-center mt-6">
+            <a href="{{ url_for('auth.logout') }}" class="text-text-muted hover:text-text-secondary text-sm">
+                Sign out
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
