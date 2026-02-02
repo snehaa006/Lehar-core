@@ -3,37 +3,88 @@
 {% block title %}Welcome - Lehar Core Platform{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center" style="margin-top: 80px;">
-        <div class="col-md-8 text-center">
-            <h1 class="display-3 mb-4">🏭 Lehar Core Platform</h1>
-            <p class="lead mb-4">Multi-tenant Industrial ERP System</p>
-            
-            <div class="card shadow">
-                <div class="card-body p-5">
-                    <h2 class="mb-4">✅ System is Running Successfully!</h2>
-                    
-                    <p class="mb-4">Backend + Templates + Authentication working perfectly.</p>
-                    
-                    <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 gap-3">
-                            🔐 Login
-                        </a>
-                        <a href="{{ url_for('auth.signup') }}" class="btn btn-outline-primary btn-lg px-4">
-                            📝 Sign Up
-                        </a>
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-2xl w-full text-center">
+        <!-- Logo -->
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-2xl mb-6">
+            <span class="text-white font-bold text-3xl">L</span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="text-4xl md:text-5xl font-bold text-text-primary mb-4">
+            Lehar Core Platform
+        </h1>
+        <p class="text-xl text-text-muted mb-8">
+            Industrial ERP System for Modern Teams
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+            <a href="{{ url_for('auth.login') }}"
+               class="w-full sm:w-auto px-8 py-3 btn-primary rounded-lg text-white font-semibold text-lg">
+                Sign In
+            </a>
+            <a href="{{ url_for('auth.signup') }}"
+               class="w-full sm:w-auto px-8 py-3 border border-cyan-bright text-cyan-bright rounded-lg font-semibold text-lg hover:bg-cyan-bright hover:text-dark-bg transition-colors">
+                Create Account
+            </a>
+        </div>
+
+        <!-- Features -->
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-8">
+            <h2 class="text-lg font-semibold text-text-primary mb-6">Why Lehar Core?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-cyan-dark/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
                     </div>
-                    
-                    <hr class="my-4">
-                    
-                    <h5>Features:</h5>
-                    <ul class="list-unstyled">
-                        <li>✅ Multi-tenant Organization System</li>
-                        <li>✅ Role-based Access Control</li>
-                        <li>✅ Email Verification</li>
-                        <li>✅ User Invitations</li>
-                        <li>✅ Plan-based Feature Gating</li>
-                    </ul>
+                    <h3 class="text-text-primary font-medium mb-1">Team Workspaces</h3>
+                    <p class="text-text-muted text-sm">Create or join workspaces for your teams</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-cyan-dark/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-text-primary font-medium mb-1">Secure Access</h3>
+                    <p class="text-text-muted text-sm">Role-based permissions and email verification</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-cyan-dark/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-text-primary font-medium mb-1">Easy Collaboration</h3>
+                    <p class="text-text-muted text-sm">Share workspace codes to invite team members</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- How it works -->
+        <div class="mt-8 text-left">
+            <h3 class="text-center text-text-primary font-semibold mb-4">How It Works</h3>
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <span class="w-8 h-8 bg-cyan-bright text-dark-bg rounded-full flex items-center justify-center font-bold text-sm">1</span>
+                    <span class="text-text-secondary">Create an account</span>
+                </div>
+                <svg class="hidden md:block w-8 h-8 text-dark-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+                <div class="flex items-center space-x-3">
+                    <span class="w-8 h-8 bg-cyan-bright text-dark-bg rounded-full flex items-center justify-center font-bold text-sm">2</span>
+                    <span class="text-text-secondary">Verify your email</span>
+                </div>
+                <svg class="hidden md:block w-8 h-8 text-dark-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+                <div class="flex items-center space-x-3">
+                    <span class="w-8 h-8 bg-cyan-bright text-dark-bg rounded-full flex items-center justify-center font-bold text-sm">3</span>
+                    <span class="text-text-secondary">Create or join a workspace</span>
                 </div>
             </div>
         </div>
