@@ -32,15 +32,59 @@ class UserService:
             if not user.is_active:
                 return None, "Your account has been deactivated. Please contact your administrator."
 
-            # Check organization status
-            if not user.organization or not user.organization.is_active:
-                return None, "Your organization is inactive. Please contact support."
+            # Check email verification
+            if not user.is_email_verified:
+                return None, "Please verify your email address before logging in."
+
+            # Organization check is now optional - users can exist without orgs
+            if user.organization_id and user.organization:
+                if not user.organization.is_active:
+                    return None, "Your organization is inactive. Please contact support."
 
             return user, None
 
         except Exception as e:
             logger.error(f"Error in authenticate: {str(e)}")
             return None, "An error occurred during authentication"
+
+    @staticmethod
+    def create_user(name: str, email: str, password: str, **kwargs):
+        """
+        Create a new user (simplified - no organization required)
+
+        Returns:
+            tuple: (user, error_message)
+        """
+        try:
+            # Check if user already exists
+            existing_user = User.get_by_email(email.lower())
+            if existing_user:
+                return None, "A user with this email already exists"
+
+            # Validate password strength
+            is_strong, password_msg = is_strong_password(password)
+            if not is_strong:
+                return None, password_msg
+
+            # Generate verification token
+            from app.utils import generate_verification_token
+            verification_token = generate_verification_token()
+
+            # Create user without organization
+            user = User.create(
+                name=name,
+                email=email,
+                password=password,
+                email_verification_token=verification_token,
+                is_email_verified=False,
+                **kwargs
+            )
+
+            return user, None
+
+        except Exception as e:
+            logger.error(f"Error in create_user: {str(e)}")
+            return None, f"An error occurred while creating the user: {str(e)}"
 
     @staticmethod
     def verify_email(token: str):

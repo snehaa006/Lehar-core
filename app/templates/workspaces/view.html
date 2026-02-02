@@ -127,12 +127,37 @@
             </div>
             {% endif %}
 
+            <!-- Join Code (for admins) -->
+            {% if (is_admin or is_org_admin) and workspace.join_code %}
+            <div class="bg-dark-card border border-cyan-bright/30 rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-dark-border">
+                    <h3 class="text-lg font-semibold text-text-primary">Share Workspace</h3>
+                </div>
+                <div class="p-4">
+                    <p class="text-text-muted text-sm mb-3">Share this code with others to let them request to join:</p>
+                    <div class="flex items-center justify-center space-x-3 p-4 bg-dark-bg rounded-lg">
+                        <span class="text-2xl font-mono font-bold text-cyan-bright tracking-wider">{{ workspace.join_code }}</span>
+                        <button onclick="navigator.clipboard.writeText('{{ workspace.join_code }}'); this.innerHTML='Copied!';"
+                                class="px-3 py-1 bg-cyan-dark/20 text-cyan-bright text-sm rounded hover:bg-cyan-dark/40 transition-colors">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Workspace Info -->
             <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
                 <div class="px-6 py-4 border-b border-dark-border">
                     <h3 class="text-lg font-semibold text-text-primary">Workspace Info</h3>
                 </div>
                 <div class="p-4 space-y-3">
+                    {% if workspace.org_name %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-text-muted">Organization</span>
+                        <span class="text-text-primary">{{ workspace.org_name }}</span>
+                    </div>
+                    {% endif %}
                     <div class="flex justify-between text-sm">
                         <span class="text-text-muted">Created</span>
                         <span class="text-text-primary">{{ workspace.created_at.strftime('%b %d, %Y') if workspace.created_at else 'N/A' }}</span>
@@ -141,10 +166,17 @@
                         <span class="text-text-muted">Members</span>
                         <span class="text-text-primary">{{ members | length }}</span>
                     </div>
+                    {% if workspace.is_domain_verified %}
                     <div class="flex justify-between text-sm">
-                        <span class="text-text-muted">Discoverable</span>
-                        <span class="text-text-primary">{{ 'Yes' if workspace.is_discoverable else 'No' }}</span>
+                        <span class="text-text-muted">Domain Verified</span>
+                        <span class="text-green-400 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ workspace.verified_domain }}
+                        </span>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

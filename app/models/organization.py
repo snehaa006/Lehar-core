@@ -1,7 +1,7 @@
 """
 Organization Model - Firestore Version
-Represents a company/business entity
-Users belong to one organization, workspaces exist within organizations
+Represents a company/business entity (now optional for workspaces)
+Organizations are kept for backward compatibility but are no longer required
 """
 from datetime import datetime
 from typing import Optional, Dict, Any, List

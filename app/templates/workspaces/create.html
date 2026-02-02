@@ -6,11 +6,11 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="mb-8">
-        <a href="{{ url_for('workspaces.list_workspaces') }}" class="text-text-muted hover:text-cyan-bright text-sm mb-4 inline-flex items-center">
+        <a href="{{ url_for('workspaces.workspace_selector') }}" class="text-text-muted hover:text-cyan-bright text-sm mb-4 inline-flex items-center">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
-            Back to Workspaces
+            Back
         </a>
         <h1 class="text-2xl font-bold text-text-primary mt-4">Create New Workspace</h1>
         <p class="text-text-muted mt-1">Set up a new workspace for your team</p>
@@ -18,47 +18,111 @@
 
     <!-- Create Form -->
     <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
-        <form method="POST" action="{{ url_for('workspaces.create_workspace') }}" class="p-6 space-y-6">
+        <form method="POST" action="{{ url_for('workspaces.create_workspace') }}" class="p-6 space-y-8">
+
+            <!-- Workspace Details Section -->
             <div>
-                <label for="name" class="block text-sm font-medium text-text-secondary mb-2">Workspace Name *</label>
-                <input type="text" id="name" name="name" required
-                       placeholder="e.g., Engineering Team"
-                       class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright">
+                <h3 class="text-lg font-semibold text-cyan-bright mb-4 flex items-center">
+                    <span class="w-8 h-8 bg-cyan-dark/20 rounded-lg flex items-center justify-center mr-3 text-sm">1</span>
+                    Workspace Details
+                </h3>
+                <div class="space-y-4 pl-11">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-text-secondary mb-2">Workspace Name *</label>
+                        <input type="text" id="name" name="name" required
+                               value="{{ form_data.name if form_data else '' }}"
+                               placeholder="e.g., Engineering Team"
+                               class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright">
+                    </div>
+
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-text-secondary mb-2">Description</label>
+                        <textarea id="description" name="description" rows="2"
+                                  placeholder="Describe what this workspace is for..."
+                                  class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright">{{ form_data.description if form_data else '' }}</textarea>
+                    </div>
+
+                    <div>
+                        <label for="workspace_type" class="block text-sm font-medium text-text-secondary mb-2">Workspace Type</label>
+                        <select id="workspace_type" name="workspace_type"
+                                class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                            <option value="general">General</option>
+                            <option value="hr">HR</option>
+                            <option value="engineering">Engineering</option>
+                            <option value="manufacturing">Manufacturing</option>
+                            <option value="plant">Plant</option>
+                            <option value="inventory">Inventory</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
+            <!-- Organization Details Section (Optional) -->
             <div>
-                <label for="description" class="block text-sm font-medium text-text-secondary mb-2">Description</label>
-                <textarea id="description" name="description" rows="3"
-                          placeholder="Describe what this workspace is for..."
-                          class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright"></textarea>
+                <h3 class="text-lg font-semibold text-cyan-bright mb-4 flex items-center">
+                    <span class="w-8 h-8 bg-cyan-dark/20 rounded-lg flex items-center justify-center mr-3 text-sm">2</span>
+                    Organization Details
+                    <span class="ml-2 text-xs text-text-muted font-normal">(Optional - for display purposes)</span>
+                </h3>
+                <div class="space-y-4 pl-11">
+                    <div>
+                        <label for="org_name" class="block text-sm font-medium text-text-secondary mb-2">Organization / Company Name</label>
+                        <input type="text" id="org_name" name="org_name"
+                               value="{{ form_data.org_name if form_data else '' }}"
+                               placeholder="Your Company Name"
+                               class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="org_industry" class="block text-sm font-medium text-text-secondary mb-2">Industry</label>
+                            <select id="org_industry" name="org_industry"
+                                    class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary">
+                                <option value="">Select Industry</option>
+                                <option value="Manufacturing">Manufacturing</option>
+                                <option value="Textile">Textile</option>
+                                <option value="Automotive">Automotive</option>
+                                <option value="Food Processing">Food Processing</option>
+                                <option value="Pharmaceuticals">Pharmaceuticals</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Education">Education</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="org_size" class="block text-sm font-medium text-text-secondary mb-2">Company Size</label>
+                            <select id="org_size" name="org_size"
+                                    class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary">
+                                <option value="">Select Size</option>
+                                <option value="1-10">1-10 employees</option>
+                                <option value="11-50">11-50 employees</option>
+                                <option value="51-200">51-200 employees</option>
+                                <option value="201-500">201-500 employees</option>
+                                <option value="500+">500+ employees</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="org_website" class="block text-sm font-medium text-text-secondary mb-2">Website</label>
+                        <input type="url" id="org_website" name="org_website"
+                               value="{{ form_data.org_website if form_data else '' }}"
+                               placeholder="https://yourcompany.com"
+                               class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright">
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <label for="workspace_type" class="block text-sm font-medium text-text-secondary mb-2">Workspace Type *</label>
-                <select id="workspace_type" name="workspace_type" required
-                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright focus:ring-1 focus:ring-cyan-bright">
-                    <option value="general">General</option>
-                    <option value="hr">HR</option>
-                    <option value="engineering">Engineering</option>
-                    <option value="manufacturing">Manufacturing</option>
-                    <option value="plant">Plant</option>
-                    <option value="inventory">Inventory</option>
-                    <option value="admin">Admin</option>
-                </select>
-            </div>
-
-            <div class="flex items-center">
-                <input type="checkbox" id="is_discoverable" name="is_discoverable" value="true" checked
-                       class="w-4 h-4 text-cyan-bright bg-dark-bg border-dark-border rounded focus:ring-cyan-bright">
-                <label for="is_discoverable" class="ml-2 text-sm text-text-secondary">
-                    Allow users from the same domain to discover and request to join
-                </label>
-            </div>
-
+            <!-- Submit -->
             <div class="pt-4 border-t border-dark-border">
-                <button type="submit" class="w-full px-6 py-3 btn-primary rounded-lg text-dark-bg font-semibold">
+                <button type="submit" class="w-full px-6 py-3 btn-primary rounded-lg text-white font-semibold">
                     Create Workspace
                 </button>
+                <p class="text-center text-text-muted text-sm mt-4">
+                    After creating, you'll get a unique code to invite others to join.
+                </p>
             </div>
         </form>
     </div>
