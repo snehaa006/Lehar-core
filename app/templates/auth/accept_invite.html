@@ -36,14 +36,16 @@
                             <span class="text-text-muted">Name</span>
                             <span class="text-text-primary">{{ invitation.name or 'Not specified' }}</span>
                         </div>
+                        {% if organization %}
                         <div class="flex items-center justify-between">
                             <span class="text-text-muted">Organization</span>
-                            <span class="text-text-primary">{{ invitation.organization.name }}</span>
+                            <span class="text-text-primary">{{ organization.name }}</span>
                         </div>
-                        {% if invitation.workspace %}
+                        {% endif %}
+                        {% if workspace %}
                         <div class="flex items-center justify-between">
                             <span class="text-text-muted">Workspace</span>
-                            <span class="text-text-primary">{{ invitation.workspace.name }}</span>
+                            <span class="text-text-primary">{{ workspace.name }}</span>
                         </div>
                         {% endif %}
                         <div class="flex items-center justify-between">
@@ -55,6 +57,34 @@
                     </div>
                 </div>
 
+                {% if existing_user %}
+                <!-- Existing User - Simple Accept Button -->
+                <div class="bg-dark-bg border border-green-500/30 rounded-lg p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-text-primary font-medium">Account Found</p>
+                            <p class="text-text-muted text-sm">You already have an account as {{ existing_user.name }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('invitations.accept_invitation', token=token) }}" id="acceptForm">
+                    <button type="submit" class="w-full px-6 py-3 btn-primary rounded-lg text-dark-bg font-semibold">
+                        Accept Invitation & Join Workspace
+                    </button>
+                </form>
+
+                <p class="text-center text-xs text-text-muted mt-4">
+                    You'll be added to {{ workspace.name if workspace else 'the workspace' }} with your existing account
+                </p>
+
+                {% else %}
+                <!-- New User - Registration Form -->
                 <form method="POST" action="{{ url_for('invitations.accept_invitation', token=token) }}" id="acceptForm">
                     <h4 class="text-sm font-medium text-text-secondary mb-4">Complete Your Registration</h4>
 
@@ -91,20 +121,24 @@
                 </form>
 
                 <p class="text-center text-xs text-text-muted mt-4">
-                    By accepting, you agree to join {{ invitation.organization.name }}
+                    By accepting, you agree to join {{ organization.name if organization else workspace.name }}
                 </p>
+                {% endif %}
             </div>
         </div>
 
+        {% if not existing_user %}
         <p class="text-center text-text-muted text-sm mt-6">
             Already have an account?
             <a href="{{ url_for('auth.login') }}" class="text-cyan-bright hover:text-cyan-light">Log in here</a>
         </p>
+        {% endif %}
     </div>
 </div>
 
 {% block extra_js %}
 <script>
+    {% if not existing_user %}
     document.getElementById('acceptForm').addEventListener('submit', function(e) {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirm_password').value;
@@ -115,6 +149,7 @@
             return false;
         }
     });
+    {% endif %}
 </script>
 {% endblock %}
 {% endblock %}
