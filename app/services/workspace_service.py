@@ -115,11 +115,11 @@ class WorkspaceService:
             tuple: (membership, error_message)
         """
         try:
-            # Check if adding user has permission
+            # Check if adding user has permission (workspace admin)
             is_workspace_admin = WorkspaceMembership.user_is_workspace_admin(
                 added_by_user.id, workspace_id
             )
-            if not is_workspace_admin and not added_by_user.is_org_admin():
+            if not is_workspace_admin:
                 return None, "You don't have permission to add users to this workspace"
 
             # Check if user is already a member
@@ -127,15 +127,14 @@ class WorkspaceService:
             if existing and existing.is_active:
                 return None, "User is already a member of this workspace"
 
-            # Check if users are in same organization
+            # Verify user exists
             user = User.get_by_id(user_id)
             workspace = Workspace.get_by_id(workspace_id)
 
             if not user or not workspace:
                 return None, "User or workspace not found"
 
-            if user.organization_id != workspace.organization_id:
-                return None, "User must be in the same organization"
+            # Note: No longer requiring same organization - users can join workspaces across organizations
 
             # Create membership
             membership = WorkspaceMembership.create(
@@ -159,11 +158,11 @@ class WorkspaceService:
             tuple: (success, error_message)
         """
         try:
-            # Check if removing user has permission
+            # Check if removing user has permission (workspace admin)
             is_workspace_admin = WorkspaceMembership.user_is_workspace_admin(
                 removed_by_user.id, workspace_id
             )
-            if not is_workspace_admin and not removed_by_user.is_org_admin():
+            if not is_workspace_admin:
                 return False, "You don't have permission to remove users from this workspace"
 
             # Can't remove yourself if you're the only admin
@@ -192,11 +191,11 @@ class WorkspaceService:
             tuple: (success, error_message)
         """
         try:
-            # Check if updating user has permission
+            # Check if updating user has permission (workspace admin)
             is_workspace_admin = WorkspaceMembership.user_is_workspace_admin(
                 updated_by_user.id, workspace_id
             )
-            if not is_workspace_admin and not updated_by_user.is_org_admin():
+            if not is_workspace_admin:
                 return False, "You don't have permission to change roles in this workspace"
 
             membership = WorkspaceMembership.get_membership(user_id, workspace_id)
@@ -319,11 +318,11 @@ class WorkspaceService:
             if join_request.status.value != 'pending':
                 return False, "This request has already been processed"
 
-            # Check if rejecting user has permission
+            # Check if rejecting user has permission (workspace admin)
             is_workspace_admin = WorkspaceMembership.user_is_workspace_admin(
                 rejected_by_user.id, join_request.workspace_id
             )
-            if not is_workspace_admin and not rejected_by_user.is_org_admin():
+            if not is_workspace_admin:
                 return False, "You don't have permission to reject join requests"
 
             # Reject request
@@ -353,11 +352,11 @@ class WorkspaceService:
             if not workspace:
                 return None, "Workspace not found"
 
-            # Check if inviting user has permission
+            # Check if inviting user has permission (workspace admin)
             is_workspace_admin = WorkspaceMembership.user_is_workspace_admin(
                 invited_by_user.id, workspace_id
             )
-            if not is_workspace_admin and not invited_by_user.is_org_admin():
+            if not is_workspace_admin:
                 return None, "You don't have permission to invite users"
 
             # Check if user is already a member
@@ -371,14 +370,15 @@ class WorkspaceService:
             if pending:
                 return None, "A pending invitation already exists for this email"
 
-            # Check organization user limit
-            organization = Organization.get_by_id(workspace.organization_id)
-            if not existing_user and not organization.can_add_user():
-                return None, f"Organization has reached maximum number of users ({organization.max_users})"
+            # Check organization user limit only if workspace has an organization
+            if workspace.organization_id:
+                organization = Organization.get_by_id(workspace.organization_id)
+                if organization and not existing_user and not organization.can_add_user():
+                    return None, f"Organization has reached maximum number of users ({organization.max_users})"
 
             # Create invitation
             invitation = Invitation.create(
-                organization_id=workspace.organization_id,
+                organization_id=workspace.organization_id,  # Can be None
                 workspace_id=workspace_id,
                 email=email,
                 workspace_role=workspace_role,
