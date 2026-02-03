@@ -11,7 +11,7 @@ steps:
       - '-t'
       - 'gcr.io/$PROJECT_ID/lehar-core-app:latest'
       - '-f'
-      - 'deployment/Dockerfile'
+      - 'Dockerfile'
       - '.'
 
   # Step 2: Push the Docker image to Container Registry
