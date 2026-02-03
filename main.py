@@ -3,6 +3,11 @@ Main Application Entry Point - Firestore Version
 Run this file to start the Flask server
 """
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (must be before create_app)
+load_dotenv()
+
 from app import create_app
 from app.models import Organization, User, Invitation
 from app.database import db
