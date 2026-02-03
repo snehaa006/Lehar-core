@@ -31,9 +31,13 @@ class InvitationService:
         if not workspace:
             return None, "Workspace not found"
 
-        organization = Organization.get_by_id(workspace.organization_id)
-        if not organization:
-            return None, "Organization not found"
+        # Organization is optional - workspace can be standalone
+        organization = None
+        if workspace.organization_id:
+            organization = Organization.get_by_id(workspace.organization_id)
+
+        # Use workspace's stored org_name if no organization entity exists
+        organization_name = organization.name if organization else (workspace.org_name or workspace.name)
 
         # Check permissions - must be workspace admin or org admin
         is_workspace_admin = WorkspaceMembership.user_is_workspace_admin(
@@ -53,8 +57,8 @@ class InvitationService:
             if existing_user.organization_id != workspace.organization_id:
                 return None, "User belongs to a different organization"
 
-        # Check organization user limit for new users
-        if not existing_user and not organization.can_add_user():
+        # Check organization user limit for new users (only if org exists)
+        if not existing_user and organization and not organization.can_add_user():
             return None, "Organization user limit reached. Please upgrade your plan."
 
         # Check if invitation already exists
@@ -76,7 +80,7 @@ class InvitationService:
         send_invitation_email(
             invite_email=email,
             invite_name=name,
-            organization_name=organization.name,
+            organization_name=organization_name,
             workspace_name=workspace.name,
             invitation_token=invitation.token,
             invited_by_name=invited_by_user.name
