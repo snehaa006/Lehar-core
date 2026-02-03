@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Lehar Core{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Welcome, {{ user.name }}! 👋</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <strong>🎉 Success!</strong> You are now logged in to Lehar Core Platform.
+                    </div>
+                    
+                    <h4>Your Details:</h4>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>Email:</strong> {{ user.email }}</li>
+                        <li class="list-group-item"><strong>Role:</strong> <span class="badge bg-info">{{ user.role.value }}</span></li>
+                        <li class="list-group-item"><strong>Organization:</strong> {{ organization.name }}</li>
+                        <li class="list-group-item"><strong>Plan:</strong> <span class="badge bg-success">{{ organization.plan_type.value }}</span></li>
+                        <li class="list-group-item"><strong>Email Verified:</strong> 
+                            {% if user.is_email_verified %}
+                                <span class="badge bg-success">✓ Verified</span>
+                            {% else %}
+                                <span class="badge bg-warning">⚠ Not Verified</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+
+                    <h4>Quick Actions:</h4>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Profile</h5>
+                                    <p class="card-text">View and edit your profile</p>
+                                    <a href="{{ url_for('dashboard.profile') }}" class="btn btn-primary">Go to Profile</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if user.role.value in ['super_admin', 'admin'] %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Organization</h5>
+                                    <p class="card-text">Manage your organization</p>
+                                    <a href="{{ url_for('dashboard.organization_settings') }}" class="btn btn-primary">Manage Org</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Logout</h5>
+                                    <p class="card-text">Sign out of your account</p>
+                                    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
