@@ -10,9 +10,6 @@ google-cloud-storage==2.14.0
 Werkzeug==3.0.1
 PyJWT==2.8.0
 
-# Email
-Flask-Mail==0.9.1
-
 # Utils
 python-dotenv==1.0.0
 validators==0.22.0
