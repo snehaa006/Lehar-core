@@ -7,146 +7,199 @@
     <!-- Welcome Section -->
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-text-primary">Welcome back, {{ user.name }}</h1>
-        <p class="text-text-muted mt-1">
-            {% if organization %}
-                {{ organization.name }} &bull; {{ user.org_role.value | replace('_', ' ') | title if user.org_role else 'Member' }}
-            {% else %}
-                Personal Account
-            {% endif %}
-        </p>
-    </div>
-
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-dark-card border border-dark-border rounded-xl p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-text-muted text-sm">Your Workspaces</p>
-                    <p class="text-3xl font-bold text-text-primary mt-1">{{ workspaces|length }}</p>
-                </div>
-                <div class="w-12 h-12 bg-cyan-dark/20 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-dark-card border border-dark-border rounded-xl p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-text-muted text-sm">Account Type</p>
-                    <p class="text-xl font-bold text-text-primary mt-1">
-                        {% if organization %}{{ organization.name }}{% else %}Personal{% endif %}
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-dark-card border border-dark-border rounded-xl p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-text-muted text-sm">Plan</p>
-                    <p class="text-xl font-bold text-cyan-bright mt-1">
-                        {% if organization and organization.plan_type %}{{ organization.plan_type.value | title }}{% else %}Free{% endif %}
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Your Workspaces -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-text-primary">Your Workspaces</h2>
-            {% if user.can_manage_workspaces() %}
-            <a href="{{ url_for('workspaces.create_workspace') }}" class="px-4 py-2 btn-primary rounded-lg text-white text-sm font-medium">
-                + New Workspace
-            </a>
-            {% endif %}
-        </div>
-
-        {% if workspaces %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for ws in workspaces %}
-            <a href="{{ url_for('workspaces.view_workspace', workspace_id=ws.workspace.id) }}"
-               class="bg-dark-card border border-dark-border rounded-xl p-6 card-hover block">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="w-10 h-10 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-lg flex items-center justify-center">
-                        <span class="text-white font-semibold text-sm">{{ ws.workspace.name[0].upper() }}</span>
-                    </div>
-                    <span class="text-xs px-2 py-1 bg-dark-border text-text-muted rounded">
-                        {{ ws.role.value | title }}
-                    </span>
-                </div>
-                <h3 class="font-semibold text-text-primary">{{ ws.workspace.name }}</h3>
-                {% if ws.workspace.description %}
-                <p class="text-sm text-text-muted mt-1 line-clamp-2">{{ ws.workspace.description }}</p>
-                {% endif %}
-                <div class="flex items-center gap-2 mt-4">
-                    <span class="text-xs px-2 py-1 bg-cyan-dark/20 text-cyan-light rounded">
-                        {{ ws.workspace.workspace_type.value | title }}
-                    </span>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
+        {% if user.last_workspace %}
+        <p class="text-text-muted mt-1">Currently viewing: <span class="text-cyan-bright font-medium">{{ user.last_workspace.name }}</span></p>
         {% else %}
-        <div class="bg-dark-card border border-dark-border rounded-xl p-8 text-center">
-            <div class="w-16 h-16 bg-dark-border rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-text-primary mb-2">No workspaces yet</h3>
-            <p class="text-text-muted mb-4">You're not a member of any workspace yet.</p>
-            {% if user.can_manage_workspaces() %}
-            <a href="{{ url_for('workspaces.create_workspace') }}" class="inline-block px-6 py-3 btn-primary rounded-lg text-white font-semibold">
-                Create Your First Workspace
-            </a>
-            {% endif %}
-        </div>
+        <p class="text-text-muted mt-1">Select or create a workspace to get started</p>
         {% endif %}
     </div>
 
-    <!-- Quick Actions -->
-    <div class="bg-dark-card border border-dark-border rounded-xl p-6">
-        <h2 class="text-lg font-semibold text-text-primary mb-4">Quick Actions</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <a href="{{ url_for('workspaces.create_workspace') }}" class="p-4 border border-dark-border rounded-lg hover:border-cyan-bright transition-colors text-center">
-                <svg class="w-6 h-6 text-cyan-bright mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-                <span class="text-sm text-text-secondary">New Workspace</span>
-            </a>
-            <a href="{{ url_for('workspaces.join_workspace') }}" class="p-4 border border-dark-border rounded-lg hover:border-cyan-bright transition-colors text-center">
-                <svg class="w-6 h-6 text-cyan-bright mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                </svg>
-                <span class="text-sm text-text-secondary">Join Workspace</span>
-            </a>
-            <a href="{{ url_for('workspaces.workspace_selector') }}" class="p-4 border border-dark-border rounded-lg hover:border-cyan-bright transition-colors text-center">
-                <svg class="w-6 h-6 text-cyan-bright mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                </svg>
-                <span class="text-sm text-text-secondary">All Workspaces</span>
-            </a>
-            <a href="{{ url_for('dashboard.profile') }}" class="p-4 border border-dark-border rounded-lg hover:border-cyan-bright transition-colors text-center">
-                <svg class="w-6 h-6 text-cyan-bright mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                <span class="text-sm text-text-secondary">My Profile</span>
-            </a>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            {% if user.last_workspace %}
+            <!-- Current Workspace Activity -->
+            <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-text-primary">Recent Activity</h2>
+                    <span class="text-xs text-text-muted">{{ user.last_workspace.name }}</span>
+                </div>
+                <div class="divide-y divide-dark-border">
+                    <!-- Activity items - placeholder for now -->
+                    <div class="px-6 py-4 flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-cyan-bright/10 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-text-primary text-sm">Workspace <strong>{{ user.last_workspace.name }}</strong> is ready</p>
+                            <p class="text-text-muted text-xs mt-1">Start adding members and organizing your work</p>
+                        </div>
+                    </div>
+
+                    {% if user.last_workspace.member_count and user.last_workspace.member_count > 1 %}
+                    <div class="px-6 py-4 flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-green-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-text-primary text-sm"><strong>{{ user.last_workspace.member_count }}</strong> members in this workspace</p>
+                            <p class="text-text-muted text-xs mt-1">Collaborate with your team</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="px-6 py-4 text-center text-text-muted text-sm">
+                        <p>Activity feed will show workspace-specific updates here</p>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- No workspace selected -->
+            <div class="bg-dark-card border border-dark-border rounded-xl p-8 text-center">
+                <div class="w-16 h-16 bg-cyan-bright/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-text-primary mb-2">No workspace selected</h3>
+                <p class="text-text-muted mb-6">Select a workspace from your list or create a new one to get started.</p>
+                <div class="flex justify-center space-x-3">
+                    <a href="{{ url_for('workspaces.join_workspace') }}" class="px-4 py-2 border border-cyan-bright text-cyan-bright rounded-lg hover:bg-cyan-bright hover:text-white transition-colors">
+                        Join Workspace
+                    </a>
+                    <a href="{{ url_for('workspaces.create_workspace') }}" class="px-4 py-2 btn-primary rounded-lg">
+                        Create Workspace
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Your Workspaces -->
+            {% if workspaces %}
+            <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-dark-border">
+                    <h2 class="text-lg font-semibold text-text-primary">Your Workspaces</h2>
+                </div>
+                <div class="divide-y divide-dark-border">
+                    {% for ws in workspaces[:5] %}
+                    <a href="{{ url_for('workspaces.switch_workspace', workspace_id=ws.workspace.id) }}"
+                       class="block px-6 py-4 hover:bg-dark-bg transition-colors {% if user.last_workspace_id == ws.workspace.id %}bg-cyan-bright/5{% endif %}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-lg flex items-center justify-center">
+                                    <span class="text-white font-semibold">{{ ws.workspace.name[0].upper() }}</span>
+                                </div>
+                                <div>
+                                    <p class="text-text-primary font-medium">{{ ws.workspace.name }}</p>
+                                    <p class="text-text-muted text-sm">{{ ws.workspace.member_count or 0 }} members &bull; {{ ws.role.value | title }}</p>
+                                </div>
+                            </div>
+                            {% if user.last_workspace_id == ws.workspace.id %}
+                            <span class="px-2 py-1 bg-cyan-bright/10 text-cyan-bright text-xs rounded-full">Current</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% if workspaces | length > 5 %}
+                <div class="px-6 py-3 border-t border-dark-border">
+                    <a href="{{ url_for('workspaces.list_workspaces') }}" class="text-cyan-bright text-sm hover:underline">
+                        View all {{ workspaces | length }} workspaces
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Quick Stats -->
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <h3 class="text-sm font-medium text-text-muted uppercase tracking-wider mb-4">Overview</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-text-secondary">Workspaces</span>
+                        <span class="text-text-primary font-semibold">{{ workspaces | length }}</span>
+                    </div>
+                    {% if user.last_workspace %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-text-secondary">Current Members</span>
+                        <span class="text-text-primary font-semibold">{{ user.last_workspace.member_count or 0 }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-text-secondary">Account Status</span>
+                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Workspace Info -->
+            {% if user.last_workspace %}
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <h3 class="text-sm font-medium text-text-muted uppercase tracking-wider mb-4">Current Workspace</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-xl flex items-center justify-center">
+                            <span class="text-white text-lg font-bold">{{ user.last_workspace.name[0].upper() }}</span>
+                        </div>
+                        <div>
+                            <p class="text-text-primary font-semibold">{{ user.last_workspace.name }}</p>
+                            {% if user.last_workspace.org_name %}
+                            <p class="text-text-muted text-sm">{{ user.last_workspace.org_name }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if user.last_workspace.is_domain_verified %}
+                    <div class="flex items-center text-green-600 text-sm">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Domain Verified
+                    </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('workspaces.view_workspace', workspace_id=user.last_workspace.id) }}"
+                       class="block text-center px-4 py-2 border border-dark-border rounded-lg text-text-secondary hover:border-cyan-bright hover:text-cyan-bright transition-colors text-sm">
+                        View Workspace
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Getting Started -->
+            {% if not workspaces %}
+            <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-6">
+                <h3 class="text-sm font-medium text-cyan-800 uppercase tracking-wider mb-3">Getting Started</h3>
+                <ul class="space-y-2 text-sm text-cyan-700">
+                    <li class="flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Create your account
+                    </li>
+                    <li class="flex items-center text-cyan-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Create or join a workspace
+                    </li>
+                    <li class="flex items-center text-text-muted">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Invite team members
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

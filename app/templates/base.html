@@ -8,22 +8,22 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Configure Tailwind with custom colors -->
+    <!-- Configure Tailwind with custom colors - Light Cyan Theme -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'dark-bg': '#0a0b0d',
-                        'dark-card': '#1a1c23',
-                        'dark-border': '#2a2d36',
-                        'cyan-bright': '#07dcf4',
-                        'cyan-light': '#39e5f6',
-                        'cyan-dark': '#06b0c7',
-                        'text-primary': '#ffffff',
-                        'text-secondary': '#c0e8ee',
-                        'text-muted': '#b0d8dd',
-                        'text-subtle': '#d0e8ec',
+                        'dark-bg': '#f0fafa',
+                        'dark-card': '#ffffff',
+                        'dark-border': '#d0e8ec',
+                        'cyan-bright': '#0891b2',
+                        'cyan-light': '#06b6d4',
+                        'cyan-dark': '#0e7490',
+                        'text-primary': '#1e293b',
+                        'text-secondary': '#475569',
+                        'text-muted': '#64748b',
+                        'text-subtle': '#94a3b8',
                     }
                 }
             }
@@ -33,8 +33,8 @@
     <!-- Custom styles -->
     <style>
         body {
-            background-color: #0a0b0d;
-            color: #ffffff;
+            background-color: #f0fafa;
+            color: #1e293b;
         }
 
         /* Custom scrollbar */
@@ -42,32 +42,33 @@
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #1a1c23;
+            background: #e0f2f4;
         }
         ::-webkit-scrollbar-thumb {
-            background: #06b0c7;
+            background: #0891b2;
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #07dcf4;
+            background: #0e7490;
         }
 
         /* Focus styles */
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #07dcf4;
-            box-shadow: 0 0 0 2px rgba(7, 220, 244, 0.2);
+            border-color: #0891b2;
+            box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.2);
         }
 
         /* Button hover effects */
         .btn-primary {
-            background: linear-gradient(135deg, #07dcf4, #06b0c7);
+            background: linear-gradient(135deg, #0891b2, #0e7490);
+            color: white;
             transition: all 0.3s ease;
         }
         .btn-primary:hover {
-            background: linear-gradient(135deg, #39e5f6, #07dcf4);
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(7, 220, 244, 0.3);
+            box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
         }
 
         /* Card hover effect */
@@ -75,17 +76,31 @@
             transition: all 0.3s ease;
         }
         .card-hover:hover {
-            border-color: #07dcf4;
-            box-shadow: 0 4px 20px rgba(7, 220, 244, 0.15);
+            border-color: #0891b2;
+            box-shadow: 0 4px 20px rgba(8, 145, 178, 0.15);
         }
 
         /* Link styles */
         a.link-cyan {
-            color: #07dcf4;
+            color: #0891b2;
             transition: color 0.2s ease;
         }
         a.link-cyan:hover {
-            color: #39e5f6;
+            color: #0e7490;
+        }
+
+        /* Input fields for light theme */
+        input, select, textarea {
+            background-color: #f8fcfc !important;
+            border-color: #d0e8ec !important;
+            color: #1e293b !important;
+        }
+        input::placeholder, textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+        input:disabled, select:disabled {
+            background-color: #e8f4f4 !important;
+            color: #64748b !important;
         }
     </style>
 
@@ -94,7 +109,7 @@
 <body class="h-full bg-dark-bg text-text-primary">
     <!-- Navigation -->
     {% if current_user.is_authenticated %}
-    <nav class="bg-dark-card border-b border-dark-border">
+    <nav class="bg-white border-b border-dark-border shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-4">
@@ -118,12 +133,12 @@
                                 </svg>
                             </button>
                             <!-- Dropdown menu -->
-                            <div id="workspace-dropdown" class="hidden absolute left-0 mt-2 w-64 bg-dark-card border border-dark-border rounded-lg shadow-lg z-50">
+                            <div id="workspace-dropdown" class="hidden absolute left-0 mt-2 w-64 bg-white border border-dark-border rounded-lg shadow-lg z-50">
                                 <div class="py-2">
                                     <div class="px-4 py-2 text-xs text-text-muted uppercase tracking-wider">Your Workspaces</div>
                                     {% for item in current_user.workspaces[:5] %}
                                     <a href="{{ url_for('workspaces.switch_workspace', workspace_id=item.id) }}"
-                                       class="block px-4 py-2 text-text-secondary hover:bg-dark-bg hover:text-cyan-bright transition-colors {% if item.id == current_user.last_workspace_id %}bg-cyan-dark/10 text-cyan-bright{% endif %}">
+                                       class="block px-4 py-2 text-text-secondary hover:bg-dark-bg hover:text-cyan-bright transition-colors {% if item.id == current_user.last_workspace_id %}bg-cyan-bright/10 text-cyan-bright{% endif %}">
                                         <div class="flex items-center justify-between">
                                             <span>{{ item.name }}</span>
                                             {% if item.id == current_user.last_workspace_id %}
@@ -149,15 +164,23 @@
                     <a href="{{ url_for('dashboard.index') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Dashboard</a>
                     <a href="{{ url_for('workspaces.list_workspaces') }}" class="text-text-secondary hover:text-cyan-bright transition-colors">Workspaces</a>
 
+                    <!-- Settings Icon -->
+                    <a href="{{ url_for('settings.index') }}" class="text-text-secondary hover:text-cyan-bright transition-colors" title="Settings">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </a>
+
                     <!-- User info and logout -->
                     <div class="flex items-center space-x-2 text-text-secondary">
-                        <div class="w-8 h-8 bg-dark-border rounded-full flex items-center justify-center">
-                            <span class="text-sm font-medium">{{ current_user.name[0].upper() }}</span>
+                        <div class="w-8 h-8 bg-cyan-bright/20 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-medium text-cyan-dark">{{ current_user.name[0].upper() }}</span>
                         </div>
                         <span class="hidden md:block">{{ current_user.name }}</span>
                     </div>
 
-                    <a href="{{ url_for('auth.logout') }}" class="px-4 py-2 bg-dark-border hover:bg-cyan-dark text-text-primary rounded-lg transition-colors">Logout</a>
+                    <a href="{{ url_for('auth.logout') }}" class="px-4 py-2 bg-dark-bg border border-dark-border hover:bg-cyan-bright hover:text-white hover:border-cyan-bright text-text-primary rounded-lg transition-colors">Logout</a>
                 </div>
             </div>
         </div>
@@ -180,7 +203,7 @@
         {% if messages %}
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
                 {% for category, message in messages %}
-                    <div class="mb-3 p-4 rounded-lg border {% if category == 'success' %}bg-green-900/30 border-green-500 text-green-300{% elif category == 'error' %}bg-red-900/30 border-red-500 text-red-300{% else %}bg-cyan-900/30 border-cyan-bright text-cyan-light{% endif %}">
+                    <div class="mb-3 p-4 rounded-lg border {% if category == 'success' %}bg-green-50 border-green-400 text-green-700{% elif category == 'error' %}bg-red-50 border-red-400 text-red-700{% else %}bg-cyan-50 border-cyan-400 text-cyan-700{% endif %}">
                         <div class="flex items-center justify-between">
                             <span>{{ message }}</span>
                             <button onclick="this.parentElement.parentElement.remove()" class="text-current opacity-70 hover:opacity-100">
@@ -201,7 +224,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark-card border-t border-dark-border py-6 mt-auto">
+    <footer class="bg-white border-t border-dark-border py-6 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <p class="text-text-muted text-sm">2026 Lehar Core Platform. All rights reserved.</p>
