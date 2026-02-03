@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Resend Verification - Lehar Core{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-md w-full">
+        <!-- Logo and Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-2xl mb-4">
+                <span class="text-white font-bold text-2xl">L</span>
+            </div>
+            <h1 class="text-3xl font-bold text-text-primary">Resend Verification</h1>
+            <p class="text-text-muted mt-2">Enter your email to receive a new verification link</p>
+        </div>
+
+        <!-- Resend Form -->
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-8">
+            <form method="POST" action="{{ url_for('auth.resend_verification') }}" class="space-y-6">
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-text-secondary mb-2">Email address</label>
+                    <input type="email" id="email" name="email"
+                           class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-cyan-bright"
+                           placeholder="you@example.com" required>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="w-full btn-primary py-3 px-4 rounded-lg text-white font-semibold">
+                    Send Verification Email
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-dark-border"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-dark-card text-text-muted">Already verified?</span>
+                </div>
+            </div>
+
+            <!-- Login link -->
+            <a href="{{ url_for('auth.login') }}" class="block w-full py-3 px-4 text-center border border-cyan-bright text-cyan-bright rounded-lg hover:bg-cyan-bright hover:text-dark-bg transition-colors">
+                Back to Login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
