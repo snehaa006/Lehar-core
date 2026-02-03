@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Lehar Core{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-text-primary">Settings</h1>
+        <p class="text-text-muted mt-1">Manage your account and workspace settings</p>
+    </div>
+
+    <div class="space-y-6">
+        <!-- Profile Settings -->
+        <a href="{{ url_for('settings.profile') }}" class="block bg-dark-card border border-dark-border rounded-xl p-6 hover:border-cyan-bright transition-colors">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-cyan-bright/10 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-cyan-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-text-primary">Profile Settings</h3>
+                        <p class="text-text-muted text-sm">Update your name, email, password, and personal information</p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+
+        <!-- Workspace Settings (for admins) -->
+        {% if admin_workspaces %}
+        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-text-primary">Workspace Settings</h3>
+                        <p class="text-text-muted text-sm">Manage workspaces you administer</p>
+                    </div>
+                </div>
+            </div>
+            <div class="divide-y divide-dark-border">
+                {% for item in admin_workspaces %}
+                {% set workspace = item.workspace %}
+                <a href="{{ url_for('settings.workspace_settings', workspace_id=workspace.id) }}"
+                   class="block px-6 py-4 hover:bg-dark-bg transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-cyan-bright to-cyan-dark rounded-lg flex items-center justify-center">
+                                <span class="text-white font-semibold">{{ workspace.name[0].upper() }}</span>
+                            </div>
+                            <div>
+                                <p class="text-text-primary font-medium">{{ workspace.name }}</p>
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <span class="text-text-muted">{{ workspace.member_count or 0 }} members</span>
+                                    {% if workspace.is_domain_verified %}
+                                    <span class="flex items-center text-green-600">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Verified
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Account Info -->
+        <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-text-primary mb-4">Account Information</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                    <span class="text-text-muted">Email</span>
+                    <span class="text-text-primary">{{ user.email }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                    <span class="text-text-muted">Email Verified</span>
+                    {% if user.is_email_verified %}
+                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Verified</span>
+                    {% else %}
+                    <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">Not Verified</span>
+                    {% endif %}
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                    <span class="text-text-muted">Member Since</span>
+                    <span class="text-text-primary">{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2">
+                    <span class="text-text-muted">Workspaces</span>
+                    <span class="text-text-primary">{{ user.workspace_memberships | length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

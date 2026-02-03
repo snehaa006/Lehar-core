@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}{{ workspace.name }} Settings - Lehar Core{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="{{ url_for('settings.index') }}" class="text-text-muted hover:text-cyan-bright text-sm mb-2 inline-flex items-center">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Settings
+        </a>
+        <h1 class="text-2xl font-bold text-text-primary mt-2">{{ workspace.name }} Settings</h1>
+        <p class="text-text-muted mt-1">Manage workspace details and domain verification</p>
+    </div>
+
+    <div class="space-y-8">
+        <!-- Workspace Details -->
+        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border">
+                <h2 class="text-lg font-semibold text-text-primary">Workspace Details</h2>
+            </div>
+            <div class="p-6">
+                <form method="POST" action="{{ url_for('settings.workspace_settings', workspace_id=workspace.id) }}">
+                    <input type="hidden" name="action" value="update_workspace">
+
+                    <div class="space-y-5">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-text-secondary mb-2">Workspace Name *</label>
+                            <input type="text" id="name" name="name" value="{{ workspace.name }}" required
+                                   class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                        </div>
+
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-text-secondary mb-2">Description</label>
+                            <textarea id="description" name="description" rows="3"
+                                      class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">{{ workspace.description or '' }}</textarea>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <h3 class="text-sm font-medium text-text-primary mb-4">Organization Details (Optional)</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="org_name" class="block text-sm font-medium text-text-secondary mb-2">Organization Name</label>
+                                    <input type="text" id="org_name" name="org_name" value="{{ workspace.org_name or '' }}"
+                                           class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                                </div>
+
+                                <div>
+                                    <label for="org_industry" class="block text-sm font-medium text-text-secondary mb-2">Industry</label>
+                                    <select id="org_industry" name="org_industry"
+                                            class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                                        <option value="">Select industry</option>
+                                        <option value="technology" {% if workspace.org_industry == 'technology' %}selected{% endif %}>Technology</option>
+                                        <option value="manufacturing" {% if workspace.org_industry == 'manufacturing' %}selected{% endif %}>Manufacturing</option>
+                                        <option value="healthcare" {% if workspace.org_industry == 'healthcare' %}selected{% endif %}>Healthcare</option>
+                                        <option value="finance" {% if workspace.org_industry == 'finance' %}selected{% endif %}>Finance</option>
+                                        <option value="retail" {% if workspace.org_industry == 'retail' %}selected{% endif %}>Retail</option>
+                                        <option value="education" {% if workspace.org_industry == 'education' %}selected{% endif %}>Education</option>
+                                        <option value="other" {% if workspace.org_industry == 'other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="org_size" class="block text-sm font-medium text-text-secondary mb-2">Company Size</label>
+                                    <select id="org_size" name="org_size"
+                                            class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                                        <option value="">Select size</option>
+                                        <option value="1-10" {% if workspace.org_size == '1-10' %}selected{% endif %}>1-10 employees</option>
+                                        <option value="11-50" {% if workspace.org_size == '11-50' %}selected{% endif %}>11-50 employees</option>
+                                        <option value="51-200" {% if workspace.org_size == '51-200' %}selected{% endif %}>51-200 employees</option>
+                                        <option value="201-500" {% if workspace.org_size == '201-500' %}selected{% endif %}>201-500 employees</option>
+                                        <option value="500+" {% if workspace.org_size == '500+' %}selected{% endif %}>500+ employees</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="org_website" class="block text-sm font-medium text-text-secondary mb-2">Website</label>
+                                    <input type="url" id="org_website" name="org_website" value="{{ workspace.org_website or '' }}"
+                                           placeholder="https://example.com"
+                                           class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full px-6 py-3 btn-primary rounded-lg font-semibold">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Domain Verification -->
+        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-text-primary">Domain Verification</h2>
+                    {% if workspace.is_domain_verified %}
+                    <span class="flex items-center text-green-600 text-sm">
+                        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Verified: {{ workspace.verified_domain }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="p-6">
+                <p class="text-text-muted mb-4">
+                    Verify your organization's domain to claim ownership. Once verified, this organization name will be unique and protected.
+                </p>
+
+                {% if not workspace.is_domain_verified %}
+                <div class="bg-cyan-50 border border-cyan-200 rounded-lg p-4 mb-6">
+                    <h3 class="font-medium text-cyan-800 mb-2">How to verify your domain:</h3>
+                    <ol class="list-decimal list-inside text-cyan-700 text-sm space-y-1">
+                        <li>Add a TXT record to your domain's DNS settings</li>
+                        <li>Set the TXT record value to: <code class="bg-cyan-100 px-1 rounded">{{ expected_txt }}</code></li>
+                        <li>Wait for DNS propagation (usually 5-30 minutes)</li>
+                        <li>Click "Verify Domain" below</li>
+                    </ol>
+                </div>
+
+                {% if workspace.verified_domain and not workspace.is_domain_verified %}
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                    <p class="text-amber-700 text-sm">
+                        <strong>Pending verification for:</strong> {{ workspace.verified_domain }}
+                    </p>
+                    <p class="text-amber-600 text-sm mt-1">
+                        Add this TXT record: <code class="bg-amber-100 px-1 rounded">{{ expected_txt }}</code>
+                    </p>
+                </div>
+
+                <form method="POST" action="{{ url_for('settings.workspace_settings', workspace_id=workspace.id) }}" class="mb-4">
+                    <input type="hidden" name="action" value="verify_domain">
+                    <button type="submit" class="px-6 py-3 btn-primary rounded-lg font-semibold">
+                        Verify Domain
+                    </button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('settings.workspace_settings', workspace_id=workspace.id) }}" class="space-y-4">
+                    <input type="hidden" name="action" value="initiate_verification">
+                    <div>
+                        <label for="domain" class="block text-sm font-medium text-text-secondary mb-2">Domain to Verify</label>
+                        <input type="text" id="domain" name="domain" placeholder="example.com"
+                               class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg text-text-primary focus:border-cyan-bright">
+                        <p class="mt-1 text-xs text-text-muted">Enter your organization's domain (e.g., company.com)</p>
+                    </div>
+                    <button type="submit" class="px-6 py-3 btn-primary rounded-lg font-semibold">
+                        Start Verification
+                    </button>
+                </form>
+                {% endif %}
+                {% else %}
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <p class="text-green-700">
+                            Your domain <strong>{{ workspace.verified_domain }}</strong> is verified. Your organization name is protected.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Join Code -->
+        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border">
+                <h2 class="text-lg font-semibold text-text-primary">Workspace Join Code</h2>
+            </div>
+            <div class="p-6">
+                <p class="text-text-muted mb-4">Share this code with others to let them request to join your workspace.</p>
+
+                <div class="flex items-center justify-between p-4 bg-dark-bg border border-dark-border rounded-lg mb-4">
+                    <span class="text-2xl font-mono font-bold text-cyan-bright tracking-wider">{{ workspace.join_code }}</span>
+                    <button onclick="navigator.clipboard.writeText('{{ workspace.join_code }}'); this.innerHTML='Copied!';"
+                            class="px-4 py-2 bg-cyan-bright/10 text-cyan-bright rounded-lg hover:bg-cyan-bright/20 transition-colors">
+                        Copy Code
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ url_for('settings.regenerate_join_code', workspace_id=workspace.id) }}">
+                    <button type="submit" class="text-sm text-text-muted hover:text-cyan-bright transition-colors">
+                        Regenerate code
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Members Quick View -->
+        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-text-primary">Members ({{ workspace.member_count or 0 }})</h2>
+                <a href="{{ url_for('workspaces.view_workspace', workspace_id=workspace.id) }}" class="text-cyan-bright text-sm hover:underline">
+                    Manage Members
+                </a>
+            </div>
+            <div class="p-6">
+                <p class="text-text-muted text-sm">
+                    View and manage workspace members, approve join requests, and send invitations from the workspace detail page.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
