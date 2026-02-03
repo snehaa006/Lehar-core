@@ -47,10 +47,9 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-text-secondary mb-2">Organization Role</label>
-                            <input type="text" value="{{ user.org_role.value|replace('_', ' ')|title }}" disabled
+                            <label class="block text-sm font-medium text-text-secondary mb-2">Account Type</label>
+                            <input type="text" value="{% if user.org_role %}{{ user.org_role.value|replace('_', ' ')|title }}{% else %}Personal Account{% endif %}" disabled
                                    class="w-full px-4 py-3 bg-dark-border border border-dark-border rounded-lg text-text-muted cursor-not-allowed">
-                            <p class="mt-1 text-xs text-text-muted">Contact your organization admin to change your role</p>
                         </div>
 
                         <button type="submit" class="w-full px-6 py-3 btn-primary rounded-lg text-dark-bg font-semibold">
@@ -108,8 +107,8 @@
                 <div class="p-6">
                     <div class="space-y-4">
                         <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                            <span class="text-text-muted">Organization</span>
-                            <span class="text-text-primary font-medium">{{ organization.name }}</span>
+                            <span class="text-text-muted">Account Type</span>
+                            <span class="text-text-primary font-medium">{% if organization %}{{ organization.name }}{% else %}Personal{% endif %}</span>
                         </div>
                         <div class="flex justify-between items-center py-2 border-b border-dark-border">
                             <span class="text-text-muted">Email Verified</span>
