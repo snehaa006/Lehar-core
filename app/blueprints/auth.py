@@ -63,19 +63,25 @@ def signup():
         return render_template("auth/signup.html", errors={}, form_data=data)
 
     # Send verification email
-    send_verification_email(
+    email_sent = send_verification_email(
         user_email=user.email,
         user_name=user.name,
         verification_token=user.email_verification_token
     )
 
+    if email_sent:
+        success_message = "Registration successful! Please check your email to verify your account."
+    else:
+        success_message = "Registration successful! However, we couldn't send the verification email. Please contact support or try resending."
+
     if request.is_json:
         return jsonify({
-            "message": "Registration successful! Please check your email to verify your account.",
-            "user_id": user.id
+            "message": success_message,
+            "user_id": user.id,
+            "email_sent": email_sent
         }), 201
 
-    flash("Registration successful! Please check your email to verify your account.", "success")
+    flash(success_message, "success" if email_sent else "warning")
     return redirect(url_for("auth.login"))
 
 
@@ -232,6 +238,70 @@ def verify_email():
     if success:
         flash(message, "success")
     else:
+        flash(message, "error")
+
+    return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/resend-verification", methods=["GET", "POST"])
+def resend_verification():
+    """Resend verification email to user"""
+    if current_user.is_authenticated:
+        return redirect(url_for("workspaces.workspace_selector"))
+
+    if request.method == "GET":
+        return render_template("auth/resend_verification.html")
+
+    data = request.get_json() if request.is_json else request.form.to_dict()
+    email = data.get("email", "").strip().lower()
+
+    if not email or not is_valid_email(email):
+        error = "Please provide a valid email address"
+        if request.is_json:
+            return jsonify({"error": error}), 400
+        flash(error, "error")
+        return render_template("auth/resend_verification.html")
+
+    from app.models import User
+    from app.utils import generate_verification_token
+
+    user = User.get_by_email(email)
+
+    if not user:
+        # Don't reveal if email exists or not for security
+        message = "If an account exists with this email, a verification link will be sent."
+        if request.is_json:
+            return jsonify({"message": message}), 200
+        flash(message, "info")
+        return redirect(url_for("auth.login"))
+
+    if user.is_email_verified:
+        message = "This email is already verified. You can login."
+        if request.is_json:
+            return jsonify({"message": message}), 200
+        flash(message, "info")
+        return redirect(url_for("auth.login"))
+
+    # Generate new verification token
+    user.email_verification_token = generate_verification_token()
+    user.save()
+
+    # Send verification email
+    email_sent = send_verification_email(
+        user_email=user.email,
+        user_name=user.name,
+        verification_token=user.email_verification_token
+    )
+
+    if email_sent:
+        message = "Verification email sent! Please check your inbox."
+        if request.is_json:
+            return jsonify({"message": message, "email_sent": True}), 200
+        flash(message, "success")
+    else:
+        message = "Failed to send verification email. Please try again later or contact support."
+        if request.is_json:
+            return jsonify({"message": message, "email_sent": False}), 500
         flash(message, "error")
 
     return redirect(url_for("auth.login"))
