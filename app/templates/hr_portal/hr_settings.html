@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}HR Portal Settings{% endblock %}
+{% block head_extra %}
+<style>
+.settings-nav-card {
+transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+.settings-nav-card:hover {
+transform: translateY(-3px);
+box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.15);
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
+<div class="mb-6 flex items-center justify-between">
+<div>
+<h1 class="text-3xl font-bold text-gray-800">HR Portal Settings</h1>
+<p class="text-gray-600 mt-1">Configure shift hours, departments, and manpower types</p>
+</div>
+<a href="{{ url_for('hr_portal.hr_home') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">← Back</a>
+</div>
+<div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl mb-6">
+<div class="space-y-6">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Default Shift Hours</label>
+<input type="number" id="shift-hours" min="1" max="24" step="0.5" value="8"
+class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+<p class="text-sm text-gray-500 mt-1">Standard working hours per shift (can be overridden per allocation)</p>
+</div>
+</div>
+<div class="mt-6">
+<button id="save-settings-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg">Save Settings</button>
+</div>
+</div>
+<!-- Management Modules -->
+<div>
+<h2 class="text-2xl font-bold text-gray-800 mb-4">Management Modules</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Manage Departments Card -->
+
+<a href="{{ url_for('hr_portal.manage_departments') }}"
+class="settings-nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl"
+>
+<div class="bg-green-100 p-4 rounded-full mb-4">
+<svg
+class="h-10 w-10 text-green-600"
+xmlns="http://www.w3.org/2000/svg"
+fill="none"
+viewBox="0 0 24 24"
+stroke="currentColor"
+>
+<path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+/>
+</svg>
+</div>
+<h3 class="text-xl font-bold text-gray-800 mb-2">Manage Departments</h3>
+<p class="text-gray-600 text-center text-sm">
+Create, edit, and archive departments
+</p>
+</a>
+<!-- Manpower Types Card -->
+
+<a href="{{ url_for('hr_portal.manage_manpower_types') }}"
+class="settings-nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl"
+>
+<div class="bg-purple-100 p-4 rounded-full mb-4">
+<svg
+class="h-10 w-10 text-purple-600"
+xmlns="http://www.w3.org/2000/svg"
+fill="none"
+viewBox="0 0 24 24"
+stroke="currentColor"
+>
+<path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+/>
+</svg>
+</div>
+<h3 class="text-xl font-bold text-gray-800 mb-2">Manpower Types</h3>
+<p class="text-gray-600 text-center text-sm">
+Manage workforce categories
+</p>
+</a>
+</div>
+</div>
+</div>
+<script src="{{ url_for('static', filename='js/hr_settings.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Cost Analytics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .date-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="date"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        button {
+            padding: 10px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-value.cost {
+            color: #27ae60;
+        }
+
+        .stat-value.hours {
+            color: #3498db;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .percentage-bar {
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .percentage-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            color: #7f8c8d;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .recalc-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .recalc-form {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .worker-search {
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge.absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .daily-breakdown {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .day-card {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+
+        .day-card:hover {
+            background: #e9ecef;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .day-date {
+            font-weight: 700;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        .day-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .day-stat-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .day-stat-label {
+            color: #7f8c8d;
+        }
+
+        .day-stat-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 2px solid #ecf0f1;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: #ecf0f1;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            color: #7f8c8d;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .modal-summary-item {
+            text-align: center;
+        }
+
+        .modal-summary-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .modal-summary-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        /* Simplified department list styling */
+        .dept-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .dept-header-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 18px;
+            border-bottom: 2px solid #e1e8ed;
+            margin-bottom: 8px;
+        }
+
+        .dept-header-row .header-label:first-child {
+            flex: 1;
+        }
+
+        .header-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-right {
+            display: flex;
+        }
+
+        .header-right .header-label {
+            width: 140px;
+            text-align: center;
+        }
+
+        .dept-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            transition: background 0.2s;
+        }
+
+        .dept-row:hover {
+            background: #e9ecef;
+        }
+
+        .dept-name {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .dept-info {
+            display: flex;
+        }
+
+        .dept-cost {
+            width: 140px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .dept-workers {
+            width: 140px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #3498db;
+            background: #e3f2fd;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .clickable-row:hover {
+            background: #e3f2fd !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-inputs {
+                flex-direction: column;
+            }
+            
+            .input-group {
+                min-width: 100%;
+            }
+            
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .dept-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 HR Cost Analytics Dashboard</h1>
+            <p>Analyze salary costs and attendance data across time periods</p>
+        </header>
+
+        <!-- Date Range Selector -->
+        <div class="date-selector">
+            <div class="date-inputs">
+                <div class="input-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="input-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate">
+                </div>
+                <button onclick="loadDashboard()">Load Data</button>
+            </div>
+        </div>
+
+        <!-- Loading/Error States -->
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        <div id="loadingMessage" class="loading" style="display: none;">
+            <p>Loading data...</p>
+        </div>
+
+        <!-- Company Summary Stats -->
+        <div id="summarySection" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Company Cost</div>
+                    <div class="stat-value cost" id="totalCost">₹0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Attendance Hours</div>
+                    <div class="stat-value hours" id="totalHours">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Cost/Day</div>
+                    <div class="stat-value" id="avgCostPerDay">₹0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Days Processed</div>
+                    <div class="stat-value" id="daysProcessed">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div id="tabsSection" style="display: none;">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('departments')">Department Breakdown</button>
+                <button class="tab" onclick="switchTab('daywise')">Day-wise Breakdown</button>
+                <button class="tab" onclick="switchTab('worker')">Worker Cost Analysis</button>
+                <button class="tab" onclick="switchTab('recalculate')">Recalculate</button>
+            </div>
+
+            <!-- Department Breakdown Tab -->
+            <div id="departments-tab" class="tab-content active">
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Department-wise Cost Breakdown</h2>
+                    </div>
+                    <div id="departmentTable"></div>
+                </div>
+            </div>
+
+            <!-- Day-wise Breakdown Tab -->
+            <div id="daywise-tab" class="tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Day-wise Cost Breakdown</h2>
+                        <div style="font-size: 14px; color: #7f8c8d;">
+                            Showing daily summaries for the selected period
+                        </div>
+                    </div>
+                    <div id="daywiseTable"></div>
+                </div>
+            </div>
+
+            <!-- Worker Cost Tab -->
+            <div id="worker-tab" class="tab-content">
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Worker Cost Analysis</h2>
+                    </div>
+                    
+                    <div class="worker-search">
+                        <div class="input-group">
+                            <label for="workerSelect">Select Worker</label>
+                            <select id="workerSelect" onchange="loadWorkerCost()">
+                                <option value="">-- Select a worker --</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="workerCostData"></div>
+                </div>
+            </div>
+
+            <!-- Recalculate Tab -->
+            <div id="recalculate-tab" class="tab-content">
+                <div class="recalc-section">
+                    <h3>⚠️ Manual Cost Recalculation</h3>
+                    <p style="margin: 10px 0;">Use this to recalculate costs for a specific date. This will overwrite existing data.</p>
+                    
+                    <div class="recalc-form">
+                        <div class="input-group">
+                            <label for="recalcDate">Date</label>
+                            <input type="date" id="recalcDate">
+                        </div>
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" id="forceRecalc"> Force Recalculate
+                            </label>
+                        </div>
+                        <button onclick="triggerRecalculation()">Recalculate</button>
+                    </div>
+                    
+                    <div id="recalcResult" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Details Modal -->
+    <div id="dateDetailsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">📅 Date Details</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalBody">
+                    <!-- Content will be dynamically inserted -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentStartDate = '';
+        let currentEndDate = '';
+        let allWorkers = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default date range (last 30 days)
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            
+            document.getElementById('startDate').valueAsDate = thirtyDaysAgo;
+            document.getElementById('endDate').valueAsDate = today;
+            document.getElementById('recalcDate').valueAsDate = today;
+            
+            // Load workers list
+            loadWorkersList();
+        });
+
+        // Switch tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Load workers list for dropdown
+        async function loadWorkersList() {
+            try {
+                const response = await fetch('/hr/api/cost-analytics/workers-list');
+                const workers = await response.json();
+                
+                allWorkers = workers;
+                
+                const select = document.getElementById('workerSelect');
+                select.innerHTML = '<option value="">-- Select a worker --</option>';
+                
+                workers.forEach(worker => {
+                    const option = document.createElement('option');
+                    option.value = worker.employee_code;
+                    option.textContent = `${worker.worker_name} (${worker.employee_code}) - ${worker.department}`;
+                    select.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Failed to load workers:', error);
+            }
+        }
+
+        // Main dashboard load
+        async function loadDashboard() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                showError('Please select both start and end dates');
+                return;
+            }
+            
+            currentStartDate = startDate;
+            currentEndDate = endDate;
+            
+            showLoading(true);
+            hideError();
+            
+            try {
+                // Load summary
+                await loadSummary(startDate, endDate);
+                
+                // Load department breakdown
+                await loadDepartmentBreakdown(startDate, endDate);
+                
+                // Load day-wise breakdown
+                await loadDaywiseBreakdown(startDate, endDate);
+                
+                // Show sections
+                document.getElementById('summarySection').style.display = 'block';
+                document.getElementById('tabsSection').style.display = 'block';
+                
+            } catch (error) {
+                showError('Failed to load dashboard: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Load summary stats
+        async function loadSummary(startDate, endDate) {
+            const response = await fetch(`/hr/api/cost-analytics/summary?start_date=${startDate}&end_date=${endDate}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch summary');
+            }
+            
+            const data = await response.json();
+            
+            document.getElementById('totalCost').textContent = formatCurrency(data.total_company_cost);
+            document.getElementById('totalHours').textContent = formatNumber(data.total_attendance_hours);
+            document.getElementById('avgCostPerDay').textContent = formatCurrency(data.average_cost_per_day);
+            document.getElementById('daysProcessed').textContent = `${data.days_processed}/${data.date_range_days}`;
+        }
+
+        // Load department breakdown
+        async function loadDepartmentBreakdown(startDate, endDate) {
+            const response = await fetch(`/hr/api/cost-analytics/department-breakdown?start_date=${startDate}&end_date=${endDate}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch department breakdown');
+            }
+            
+            const departments = await response.json();
+            
+            const container = document.getElementById('departmentTable');
+            
+            if (departments.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No department data available</p></div>';
+                return;
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Total Cost</th>
+                            <th>Total Hours</th>
+                            <th>Workers</th>
+                            <th>% of Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            departments.forEach(dept => {
+                html += `
+                    <tr>
+                        <td><strong>${dept.department}</strong></td>
+                        <td>${formatCurrency(dept.total_cost)}</td>
+                        <td>${formatNumber(dept.total_hours)}</td>
+                        <td>${dept.worker_count}/${dept.total_workers}</td>
+                        <td>
+                            ${dept.percentage_of_total.toFixed(1)}%
+                            <div class="percentage-bar">
+                                <div class="percentage-fill" style="width: ${dept.percentage_of_total}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Load day-wise breakdown
+        async function loadDaywiseBreakdown(startDate, endDate) {
+            const response = await fetch(`/hr/api/cost-analytics/daily-breakdown?start_date=${startDate}&end_date=${endDate}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch day-wise breakdown');
+            }
+            
+            const dailyData = await response.json();
+            
+            const container = document.getElementById('daywiseTable');
+            
+            if (dailyData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No daily data available for this period</p></div>';
+                return;
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Total Cost</th>
+                            <th>Total Hours</th>
+                            <th>Workers Present</th>
+                            <th>Total Workers</th>
+                            <th>Attendance %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            dailyData.forEach(day => {
+                const date = new Date(day.date);
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const attendancePercent = day.total_workers > 0 
+                    ? ((day.workers_present / day.total_workers) * 100).toFixed(1) 
+                    : 0;
+                
+                html += `
+                    <tr class="clickable-row" onclick="showDateDetails('${day.date}')" title="Click for details">
+                        <td><strong>${day.date}</strong></td>
+                        <td>${dayName}</td>
+                        <td>${formatCurrency(day.total_cost)}</td>
+                        <td>${formatNumber(day.total_hours)}</td>
+                        <td>${day.workers_present}</td>
+                        <td>${day.total_workers}</td>
+                        <td>
+                            ${attendancePercent}%
+                            <div class="percentage-bar">
+                                <div class="percentage-fill" style="width: ${attendancePercent}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Load worker cost
+        async function loadWorkerCost() {
+            const employeeCode = document.getElementById('workerSelect').value;
+            
+            if (!employeeCode) {
+                document.getElementById('workerCostData').innerHTML = '';
+                return;
+            }
+            
+            if (!currentStartDate || !currentEndDate) {
+                showError('Please load dashboard data first');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(
+                    `/hr/api/cost-analytics/worker-cost?employee_code=${employeeCode}&start_date=${currentStartDate}&end_date=${currentEndDate}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Worker not found in cost data');
+                }
+                
+                const data = await response.json();
+                
+                let html = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Cost Paid</div>
+                            <div class="stat-value cost">${formatCurrency(data.total_cost)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Hours Worked</div>
+                            <div class="stat-value hours">${formatNumber(data.total_hours)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Days Present</div>
+                            <div class="stat-value">${data.days_present}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Days Absent</div>
+                            <div class="stat-value">${data.days_absent}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="daily-breakdown">
+                        <h3 style="margin-bottom: 15px;">Daily Breakdown</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Hours</th>
+                                    <th>Shifts</th>
+                                    <th>Salary</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                data.daily_breakdown.forEach(day => {
+                    const statusBadge = day.hours_worked > 0 ? 
+                        '<span class="badge present">PRESENT</span>' : 
+                        '<span class="badge absent">ABSENT</span>';
+                    
+                    html += `
+                        <tr>
+                            <td>${day.date}</td>
+                            <td>${statusBadge}</td>
+                            <td>${day.hours_worked}</td>
+                            <td>${day.shifts_worked}</td>
+                            <td>${formatCurrency(day.todays_salary)}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                document.getElementById('workerCostData').innerHTML = html;
+                
+            } catch (error) {
+                showError('Failed to load worker cost: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Trigger recalculation
+        async function triggerRecalculation() {
+            const date = document.getElementById('recalcDate').value;
+            const force = document.getElementById('forceRecalc').checked;
+            
+            if (!date) {
+                showError('Please select a date');
+                return;
+            }
+            
+            if (!confirm(`Recalculate costs for ${date}?${force ? ' (Force mode enabled - will overwrite existing data)' : ''}`)) {
+                return;
+            }
+            
+            showLoading(true);
+            const resultDiv = document.getElementById('recalcResult');
+            resultDiv.innerHTML = '<p>Recalculating... This may take a few seconds.</p>';
+            
+            try {
+                const response = await fetch('/hr/api/cost-analytics/recalculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ date, force })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 6px;">
+                            ✅ ${result.message}
+                        </div>
+                    `;
+                    
+                    // Reload dashboard if date is in current range
+                    if (currentStartDate && currentEndDate) {
+                        setTimeout(() => loadDashboard(), 2000);
+                    }
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ ${result.message || 'Recalculation failed'}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Utility functions
+        function formatCurrency(value) {
+            return '₹' + value.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        function formatNumber(value) {
+            return value.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Modal functions
+        async function showDateDetails(date) {
+            const modal = document.getElementById('dateDetailsModal');
+            const modalBody = document.getElementById('modalBody');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            // Show modal immediately with loading state
+            modal.classList.add('active');
+            modalTitle.textContent = `📅 ${date} - Loading...`;
+            modalBody.innerHTML = '<div class="loading"><p>Loading department details...</p></div>';
+            
+            try {
+                const response = await fetch(`/hr/api/cost-analytics/date-details?date=${date}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch date details');
+                }
+                
+                const data = await response.json();
+                
+                // Update modal title
+                const dateObj = new Date(date);
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                modalTitle.textContent = `📅 ${date} (${dayName})`;
+                
+                // Build modal content - simplified with just department breakdown
+                let html = '';
+                
+                if (data.departments && data.departments.length > 0) {
+                    // Header row
+                    html += `
+                        <div class="dept-header-row">
+                            <span class="header-label">Department</span>
+                            <div class="header-right">
+                                <span class="header-label">Cost</span>
+                                <span class="header-label">Workers Present</span>
+                            </div>
+                        </div>
+                    `;
+                    html += '<div class="dept-list">';
+                    data.departments.forEach(dept => {
+                        html += `
+                            <div class="dept-row">
+                                <div class="dept-name">${dept.department}</div>
+                                <div class="dept-info">
+                                    <span class="dept-cost">${formatCurrency(dept.total_cost)}</span>
+                                    <span class="dept-workers">${dept.workers_present}/${dept.total_workers}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                } else {
+                    html += '<div class="empty-state"><p>No department data available</p></div>';
+                }
+                
+                modalBody.innerHTML = html;
+                
+            } catch (error) {
+                modalBody.innerHTML = `
+                    <div class="error">
+                        ❌ Failed to load details: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('dateDetailsModal');
+            modal.classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('dateDetailsModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
