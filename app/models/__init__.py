@@ -8,6 +8,12 @@ from app.models.workspace import Workspace, WorkspaceType, WorkspaceRole, Worksp
 from app.models.workspace_membership import WorkspaceMembership, WorkspaceMembershipRepository
 from app.models.join_request import JoinRequest, JoinRequestStatus, JoinRequestRepository
 from app.models.invitation import Invitation, InvitationStatus, InvitationRepository
+from app.models.hr_department import HRDepartment, HRDepartmentRepository
+from app.models.hr_manpower_type import HRManpowerType, HRManpowerTypeRepository
+from app.models.hr_worker import HRWorker, HRWorkerRepository
+from app.models.hr_attendance import HRAttendance, HRAttendanceRepository
+from app.models.hr_settings import HRSettings, HRSettingsRepository
+from app.models.hr_cost import HRCost, HRCostRepository
 
 __all__ = [
     # Organization
@@ -33,5 +39,18 @@ __all__ = [
     # Invitation
     'Invitation',
     'InvitationStatus',
-    'InvitationRepository'
+    'InvitationRepository',
+    # HR Models
+    'HRDepartment',
+    'HRDepartmentRepository',
+    'HRManpowerType',
+    'HRManpowerTypeRepository',
+    'HRWorker',
+    'HRWorkerRepository',
+    'HRAttendance',
+    'HRAttendanceRepository',
+    'HRSettings',
+    'HRSettingsRepository',
+    'HRCost',
+    'HRCostRepository',
 ]

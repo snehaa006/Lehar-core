@@ -906,7 +906,7 @@
   </div>
 
   <script>
-    const API_BASE = "/hr/api/v1";
+    const API_BASE = "/hr/{{ workspace_id }}/api/v1";
     const TOAST_DURATION = 3000;
     const ANIMATION_DURATION = 300;
 
@@ -1146,7 +1146,7 @@
 
     async function loadDepartments() {
       try {
-        const response = await fetch("/hr/api/departments");
+        const response = await fetch(`/hr/{{ workspace_id }}/api/departments`);
         if (response.ok) {
           allDepartments = await response.json();
 
@@ -1166,7 +1166,7 @@
     async function loadWorkers() {
       showLoading();
       try {
-        const response = await fetch("/hr/api/workers");
+        const response = await fetch(`/hr/{{ workspace_id }}/api/workers`);
         if (!response.ok) throw new Error("Failed to fetch workers");
 
         const workers = await response.json();

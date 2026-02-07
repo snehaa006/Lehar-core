@@ -13,7 +13,7 @@
             <button id="add-dept-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
                 + Add Department
             </button>
-            <a href="{{ url_for('hr_portal.hr_home') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+            <a href="{{ url_for('hr_portal.hr_home', workspace_id=workspace_id) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
                 ← Back
             </a>
         </div>
@@ -58,5 +58,70 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/hr_departments.js') }}"></script>
+<script>
+const API_BASE = "/hr/{{ workspace_id }}/api";
+let editingDeptId = null;
+
+async function loadDepartments() {
+    try {
+        const res = await fetch(`${API_BASE}/departments`);
+        const depts = await res.json();
+        const tbody = document.getElementById('depts-tbody');
+        tbody.innerHTML = '';
+        depts.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">${d.name}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${d.head || '-'}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${d.description || '-'}</td>
+                <td class="px-6 py-4 text-sm">
+                    <button onclick="editDept('${d.id}','${d.name}','${d.head || ''}','${d.description || ''}')" class="text-blue-600 hover:text-blue-800 mr-3">Edit</button>
+                    <button onclick="deleteDept('${d.id}','${d.name}')" class="text-red-600 hover:text-red-800">Archive</button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    } catch (e) { console.error('Failed to load departments:', e); }
+}
+
+function showModal(title, name='', head='', desc='') {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('dept-name').value = name;
+    document.getElementById('dept-head').value = head;
+    document.getElementById('dept-desc').value = desc;
+    document.getElementById('dept-modal').classList.remove('hidden');
+    document.getElementById('dept-modal').classList.add('flex');
+}
+
+function hideModal() {
+    document.getElementById('dept-modal').classList.add('hidden');
+    document.getElementById('dept-modal').classList.remove('flex');
+    editingDeptId = null;
+}
+
+document.getElementById('add-dept-btn').addEventListener('click', () => { editingDeptId = null; showModal('Add Department'); });
+document.getElementById('cancel-btn').addEventListener('click', hideModal);
+document.getElementById('save-btn').addEventListener('click', async () => {
+    const data = { name: document.getElementById('dept-name').value, head: document.getElementById('dept-head').value, description: document.getElementById('dept-desc').value };
+    const url = editingDeptId ? `${API_BASE}/departments/${editingDeptId}` : `${API_BASE}/departments`;
+    const method = editingDeptId ? 'PUT' : 'POST';
+    try {
+        const res = await fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+        const result = await res.json();
+        if (!res.ok) { alert(result.error || 'Failed'); return; }
+        hideModal(); loadDepartments();
+    } catch (e) { alert('Error: ' + e.message); }
+});
+
+function editDept(id, name, head, desc) { editingDeptId = id; showModal('Edit Department', name, head, desc); }
+async function deleteDept(id, name) {
+    if (!confirm(`Archive department "${name}"?`)) return;
+    try {
+        const res = await fetch(`${API_BASE}/departments/${id}`, { method: 'DELETE' });
+        if (res.ok) loadDepartments();
+        else alert('Failed to archive');
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+loadDepartments();
+</script>
 {% endblock %}
