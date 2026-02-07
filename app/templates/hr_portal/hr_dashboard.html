@@ -97,7 +97,7 @@ block head_extra %}
 
   <!-- Navigation Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <a href="{{ url_for('hr_portal.daily_attendance') }}"
+    <a href="{{ url_for('hr_portal.daily_attendance', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
       <div class="bg-blue-100 p-4 rounded-full mb-4">
         <svg class="h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -115,7 +115,7 @@ block head_extra %}
 
 
 
-    <a href="{{ url_for('hr_portal.hr_reports') }}"
+    <a href="{{ url_for('hr_portal.hr_reports', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
       <div class="bg-indigo-100 p-4 rounded-full mb-4">
         <svg class="h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -130,7 +130,7 @@ block head_extra %}
       </p>
     </a>
 
-    <a href="{{ url_for('hr_portal.hr_settings') }}"
+    <a href="{{ url_for('hr_portal.hr_settings', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
       <div class="bg-gray-100 p-4 rounded-full mb-4">
         <svg class="h-10 w-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -147,7 +147,7 @@ block head_extra %}
     </a>
 
     <!-- CORRECTED: Changed url_for('hr_portal.add_worker') to url_for('hr_portal.manage_workers') -->
-    <a href="{{ url_for('hr_portal.manage_workers') }}"
+    <a href="{{ url_for('hr_portal.manage_workers', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
       <div class="bg-gray-100 p-4 rounded-full mb-4">
         <!-- Users / Personnel SVG -->
@@ -166,7 +166,7 @@ block head_extra %}
       <h2 class="text-xl font-bold text-gray-800 mb-2">Personnel Management</h2>
       <p class="text-gray-600 text-center text-sm">Add Worker / Operator</p>
     </a>
-    <a href="{{ url_for('hr_portal.daily_attendance_v1') }}"
+    <a href="{{ url_for('hr_portal.daily_attendance', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
       <div class="bg-gray-100 p-4 rounded-full mb-4">
         <!-- Attendance / Calendar SVG -->
@@ -191,7 +191,7 @@ block head_extra %}
     <!-- Add this card to your hr_dashboard.html navigation cards grid -->
     <!-- Place it anywhere in the grid, for example after the Reports card -->
 
-    <a href="{{ url_for('hr_portal.cost_analytics_dashboard') }}"
+    <a href="{{ url_for('hr_portal.cost_analytics', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
       <div class="bg-green-100 p-4 rounded-full mb-4">
         <svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"

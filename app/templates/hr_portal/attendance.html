@@ -22,7 +22,7 @@
                 <h1 class="text-3xl font-bold text-gray-800">Daily Attendance & Allocation</h1>
                 <p class="text-gray-600 mt-1">Allocate workforce to departments by manpower type</p>
             </div>
-            <a href="{{ url_for('hr_portal.hr_home') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+            <a href="{{ url_for('hr_portal.hr_home', workspace_id=workspace_id) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
                 ← Back to HR Portal
             </a>
         </div>
@@ -146,5 +146,10 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/hr_attendance.js') }}"></script>
+<script>
+// Original allocation-based attendance - deprecated in favor of v1 worker-based attendance
+// See hr_attendance.html for the active attendance system
+const API_BASE = "/hr/{{ workspace_id }}/api";
+console.log('Allocation-based attendance loaded. Use v1 attendance system for worker-level tracking.');
+</script>
 {% endblock %}

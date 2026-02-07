@@ -751,7 +751,7 @@
         // Load workers list for dropdown
         async function loadWorkersList() {
             try {
-                const response = await fetch('/hr/api/cost-analytics/workers-list');
+                const response = await fetch('/hr/{{ workspace_id }}/api/cost-analytics/workers-list');
                 const workers = await response.json();
                 
                 allWorkers = workers;
@@ -810,7 +810,7 @@
 
         // Load summary stats
         async function loadSummary(startDate, endDate) {
-            const response = await fetch(`/hr/api/cost-analytics/summary?start_date=${startDate}&end_date=${endDate}`);
+            const response = await fetch(`/hr/{{ workspace_id }}/api/cost-analytics/summary?start_date=${startDate}&end_date=${endDate}`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch summary');
@@ -826,7 +826,7 @@
 
         // Load department breakdown
         async function loadDepartmentBreakdown(startDate, endDate) {
-            const response = await fetch(`/hr/api/cost-analytics/department-breakdown?start_date=${startDate}&end_date=${endDate}`);
+            const response = await fetch(`/hr/{{ workspace_id }}/api/cost-analytics/department-breakdown?start_date=${startDate}&end_date=${endDate}`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch department breakdown');
@@ -878,7 +878,7 @@
 
         // Load day-wise breakdown
         async function loadDaywiseBreakdown(startDate, endDate) {
-            const response = await fetch(`/hr/api/cost-analytics/daily-breakdown?start_date=${startDate}&end_date=${endDate}`);
+            const response = await fetch(`/hr/{{ workspace_id }}/api/cost-analytics/daily-breakdown?start_date=${startDate}&end_date=${endDate}`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch day-wise breakdown');
@@ -956,7 +956,7 @@
             
             try {
                 const response = await fetch(
-                    `/hr/api/cost-analytics/worker-cost?employee_code=${employeeCode}&start_date=${currentStartDate}&end_date=${currentEndDate}`
+                    `/hr/{{ workspace_id }}/api/cost-analytics/worker-cost?employee_code=${employeeCode}&start_date=${currentStartDate}&end_date=${currentEndDate}`
                 );
                 
                 if (!response.ok) {
@@ -1050,7 +1050,7 @@
             resultDiv.innerHTML = '<p>Recalculating... This may take a few seconds.</p>';
             
             try {
-                const response = await fetch('/hr/api/cost-analytics/recalculate', {
+                const response = await fetch('/hr/{{ workspace_id }}/api/cost-analytics/recalculate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1125,7 +1125,7 @@
             modalBody.innerHTML = '<div class="loading"><p>Loading department details...</p></div>';
             
             try {
-                const response = await fetch(`/hr/api/cost-analytics/date-details?date=${date}`);
+                const response = await fetch(`/hr/{{ workspace_id }}/api/cost-analytics/date-details?date=${date}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch date details');
