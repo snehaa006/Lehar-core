@@ -1,7 +1,7 @@
 """
 HR Attendance Model - Firestore Version
 Attendance records belong to a workspace. One record per worker per date.
-Document ID format: {workspace_id}_{date}_{employee_code}
+Stores hierarchy_values snapshot at time of attendance marking.
 """
 from datetime import datetime
 from typing import Optional, Dict, Any, List
@@ -83,7 +83,9 @@ class HRAttendance:
         self.employee_code = data.get('employee_code')
         self.worker_id = data.get('worker_id')
         self.worker_name = data.get('worker_name')
-        self.department = data.get('department')
+        self.hierarchy_values = data.get('hierarchy_values', {})
+        # Backward compat
+        self.department = data.get('department', self.hierarchy_values.get('department', ''))
         self.date = data.get('date')
         self.status = data.get('status')  # PRESENT or ABSENT
         self.shifts_worked = data.get('shifts_worked', 0)
@@ -105,8 +107,6 @@ class HRAttendance:
         """
         existing = cls.repository.get_worker_attendance(workspace_id, employee_code, date)
 
-        now = datetime.utcnow()
-
         if existing:
             # Update existing record
             update_data = {
@@ -123,12 +123,14 @@ class HRAttendance:
         else:
             # Create new record
             record_id = str(uuid.uuid4())
+            hierarchy_values = worker_data.get('hierarchy_values', {})
             data = {
                 'workspace_id': workspace_id,
                 'employee_code': employee_code,
                 'worker_id': worker_data.get('id', worker_data.get('unique_worker_id', '')),
                 'worker_name': worker_data.get('operator_name', ''),
-                'department': worker_data.get('department', ''),
+                'hierarchy_values': hierarchy_values,
+                'department': hierarchy_values.get('department', worker_data.get('department', '')),
                 'date': date,
                 'status': attendance_data['status'],
                 'shifts_worked': attendance_data.get('shifts_worked', 0),
@@ -171,12 +173,14 @@ class HRAttendance:
                 continue
 
             record_id = str(uuid.uuid4())
+            hierarchy_values = worker.get('hierarchy_values', {})
             data = {
                 'workspace_id': workspace_id,
                 'employee_code': emp_code,
                 'worker_id': worker.get('id', worker.get('unique_worker_id', '')),
                 'worker_name': worker.get('operator_name', ''),
-                'department': worker.get('department', ''),
+                'hierarchy_values': hierarchy_values,
+                'department': hierarchy_values.get('department', worker.get('department', '')),
                 'date': date,
                 'status': 'ABSENT',
                 'shifts_worked': 0,
@@ -199,6 +203,7 @@ class HRAttendance:
             'employee_code': self.employee_code,
             'worker_id': self.worker_id,
             'worker_name': self.worker_name,
+            'hierarchy_values': self.hierarchy_values,
             'department': self.department,
             'date': self.date,
             'status': self.status,

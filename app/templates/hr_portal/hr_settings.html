@@ -3,12 +3,14 @@
 {% block head_extra %}
 <style>
 .settings-nav-card {
-transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
 .settings-nav-card:hover {
-transform: translateY(-3px);
-box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.15);
-  }
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.15);
+}
+.config-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.config-row input[type="text"] { flex: 1; }
 </style>
 {% endblock %}
 {% block content %}
@@ -16,103 +18,226 @@ box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.15);
 <div class="mb-6 flex items-center justify-between">
 <div>
 <h1 class="text-3xl font-bold text-gray-800">HR Portal Settings</h1>
-<p class="text-gray-600 mt-1">Configure shift hours, departments, and manpower types</p>
+<p class="text-gray-600 mt-1">Configure hierarchy, salary components, and shift settings</p>
 </div>
 <a href="{{ url_for('hr_portal.hr_home', workspace_id=workspace_id) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">← Back</a>
 </div>
+
+<!-- Shift Settings -->
 <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl mb-6">
-<div class="space-y-6">
+<h2 class="text-xl font-bold text-gray-800 mb-4">Shift Settings</h2>
+<div class="space-y-4">
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-2">Default Shift Hours</label>
-<input type="number" id="shift-hours" min="1" max="24" step="0.5" value="8"
+<input type="number" id="shift-hours" min="1" max="12" step="0.5" value="10"
 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-<p class="text-sm text-gray-500 mt-1">Standard working hours per shift (can be overridden per allocation)</p>
 </div>
-</div>
-<div class="mt-6">
-<button id="save-settings-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg">Save Settings</button>
-</div>
-</div>
-<!-- Management Modules -->
 <div>
-<h2 class="text-2xl font-bold text-gray-800 mb-4">Management Modules</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<!-- Manage Departments Card -->
+<label class="block text-sm font-medium text-gray-700 mb-2">Total Shifts Available</label>
+<input type="number" id="total-shifts" min="1" max="4" value="2"
+class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Unfrozen Days (editable attendance window)</label>
+<input type="number" id="unfrozen-days" min="0" max="365" value="5"
+class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+</div>
+</div>
+<div class="mt-4">
+<button id="save-shift-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">Save Shift Settings</button>
+</div>
+</div>
 
-<a href="{{ url_for('hr_portal.manage_departments', workspace_id=workspace_id) }}"
-class="settings-nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl"
->
-<div class="bg-green-100 p-4 rounded-full mb-4">
-<svg
-class="h-10 w-10 text-green-600"
-xmlns="http://www.w3.org/2000/svg"
-fill="none"
-viewBox="0 0 24 24"
-stroke="currentColor"
->
-<path
-stroke-linecap="round"
-stroke-linejoin="round"
-stroke-width="2"
-d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-/>
-</svg>
+<!-- Hierarchy Fields Configuration -->
+<div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl mb-6">
+<h2 class="text-xl font-bold text-gray-800 mb-2">Hierarchy Fields</h2>
+<p class="text-sm text-gray-500 mb-4">Configure organizational hierarchy fields (max 5). Rename or enable/disable fields.</p>
+<div id="hierarchy-fields-container"></div>
+<div class="mt-4 flex gap-3">
+<button id="add-hierarchy-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">+ Add Field</button>
+<button id="save-hierarchy-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">Save Hierarchy Config</button>
 </div>
-<h3 class="text-xl font-bold text-gray-800 mb-2">Manage Departments</h3>
-<p class="text-gray-600 text-center text-sm">
-Create, edit, and archive departments
-</p>
-</a>
-<!-- Manpower Types Card -->
+</div>
 
-<a href="{{ url_for('hr_portal.manage_manpower_types', workspace_id=workspace_id) }}"
-class="settings-nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl"
->
-<div class="bg-purple-100 p-4 rounded-full mb-4">
-<svg
-class="h-10 w-10 text-purple-600"
-xmlns="http://www.w3.org/2000/svg"
-fill="none"
-viewBox="0 0 24 24"
-stroke="currentColor"
->
-<path
-stroke-linecap="round"
-stroke-linejoin="round"
-stroke-width="2"
-d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-/>
-</svg>
-</div>
-<h3 class="text-xl font-bold text-gray-800 mb-2">Manpower Types</h3>
-<p class="text-gray-600 text-center text-sm">
-Manage workforce categories
-</p>
-</a>
+<!-- Salary Components Configuration -->
+<div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl mb-6">
+<h2 class="text-xl font-bold text-gray-800 mb-2">Salary Components</h2>
+<p class="text-sm text-gray-500 mb-4">Configure salary breakdown components (max 5). Rename or enable/disable components.</p>
+<div id="salary-components-container"></div>
+<div class="mt-4">
+<button id="save-salary-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">Save Salary Config</button>
 </div>
 </div>
+
+<!-- Manage Hierarchy Values -->
+<div class="mb-6">
+<h2 class="text-2xl font-bold text-gray-800 mb-4">Manage Values</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="hierarchy-cards"></div>
 </div>
+</div>
+
 <script>
 const API_BASE = "/hr/{{ workspace_id }}/api/v1";
+const WORKSPACE_ID = "{{ workspace_id }}";
+let currentSettings = {{ settings | tojson }};
 
-async function loadSettings() {
-    try {
-        const res = await fetch(`${API_BASE}/settings`);
-        const s = await res.json();
-        document.getElementById('shift-hours').value = s.default_hours_worked || s.default_shift_hours || 10;
-    } catch (e) { console.error('Failed to load settings:', e); }
+// ==================== SHIFT SETTINGS ====================
+function loadShiftSettings() {
+    document.getElementById('shift-hours').value = currentSettings.default_shift_hours || 10;
+    document.getElementById('total-shifts').value = currentSettings.total_shifts_available || 2;
+    document.getElementById('unfrozen-days').value = currentSettings.unfrozen_days || 5;
 }
 
-document.getElementById('save-settings-btn').addEventListener('click', async () => {
-    const hours = parseFloat(document.getElementById('shift-hours').value);
-    if (isNaN(hours) || hours < 1 || hours > 24) { alert('Shift hours must be between 1 and 24'); return; }
+document.getElementById('save-shift-btn').addEventListener('click', async () => {
+    const data = {
+        default_hours_worked: parseFloat(document.getElementById('shift-hours').value),
+        total_shifts_available: parseInt(document.getElementById('total-shifts').value),
+        unfrozen_days: parseInt(document.getElementById('unfrozen-days').value),
+    };
     try {
-        const res = await fetch(`${API_BASE}/settings`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ default_hours_worked: hours, total_shifts_available: 2, unfrozen_days: 5 }) });
-        if (res.ok) alert('Settings saved!');
+        const res = await fetch(`${API_BASE}/settings`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+        });
+        if (res.ok) { currentSettings = await res.json(); alert('Shift settings saved!'); }
         else { const r = await res.json(); alert(r.error || 'Failed to save'); }
     } catch (e) { alert('Error: ' + e.message); }
 });
 
-loadSettings();
+// ==================== HIERARCHY FIELDS ====================
+function renderHierarchyFields() {
+    const container = document.getElementById('hierarchy-fields-container');
+    const fields = currentSettings.hierarchy_fields || [];
+    container.innerHTML = '';
+
+    fields.forEach((field, idx) => {
+        const div = document.createElement('div');
+        div.className = 'config-row border-b border-gray-100';
+        div.innerHTML = `
+            <input type="text" value="${field.key}" class="w-32 px-3 py-2 border rounded-lg bg-gray-50 text-gray-500 text-sm" disabled title="Internal key">
+            <input type="text" value="${field.label}" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" data-idx="${idx}" data-field="label" placeholder="Display name">
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" ${field.is_active ? 'checked' : ''} data-idx="${idx}" data-field="is_active" class="h-4 w-4">
+                Active
+            </label>
+            ${idx >= 2 ? `<button onclick="removeHierarchyField(${idx})" class="text-red-500 hover:text-red-700 text-sm">Remove</button>` : ''}
+        `;
+        container.appendChild(div);
+    });
+}
+
+window.removeHierarchyField = function(idx) {
+    currentSettings.hierarchy_fields.splice(idx, 1);
+    renderHierarchyFields();
+};
+
+document.getElementById('add-hierarchy-btn').addEventListener('click', () => {
+    const fields = currentSettings.hierarchy_fields || [];
+    if (fields.length >= 5) { alert('Maximum 5 hierarchy fields allowed'); return; }
+    const nextNum = fields.length + 1;
+    fields.push({ key: `custom_${nextNum}`, label: `Custom ${nextNum}`, sort_order: fields.length, is_active: false });
+    currentSettings.hierarchy_fields = fields;
+    renderHierarchyFields();
+});
+
+document.getElementById('save-hierarchy-btn').addEventListener('click', async () => {
+    const container = document.getElementById('hierarchy-fields-container');
+    const fields = currentSettings.hierarchy_fields.map((f, idx) => {
+        const labelInput = container.querySelector(`input[data-idx="${idx}"][data-field="label"]`);
+        const activeInput = container.querySelector(`input[data-idx="${idx}"][data-field="is_active"]`);
+        return {
+            key: f.key,
+            label: labelInput ? labelInput.value.trim() : f.label,
+            sort_order: idx,
+            is_active: activeInput ? activeInput.checked : f.is_active,
+        };
+    });
+    try {
+        const res = await fetch(`${API_BASE}/settings/hierarchy`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ hierarchy_fields: fields })
+        });
+        if (res.ok) {
+            currentSettings = await res.json();
+            renderHierarchyFields();
+            renderHierarchyCards();
+            alert('Hierarchy config saved!');
+        } else { const r = await res.json(); alert(r.error || 'Failed'); }
+    } catch (e) { alert('Error: ' + e.message); }
+});
+
+// ==================== SALARY COMPONENTS ====================
+function renderSalaryComponents() {
+    const container = document.getElementById('salary-components-container');
+    const components = currentSettings.salary_components || [];
+    container.innerHTML = '';
+
+    components.forEach((comp, idx) => {
+        const div = document.createElement('div');
+        div.className = 'config-row border-b border-gray-100';
+        div.innerHTML = `
+            <span class="w-28 text-sm text-gray-500">${comp.key}</span>
+            <input type="text" value="${comp.label}" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" data-idx="${idx}" data-field="salary-label" placeholder="Component name">
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" ${comp.is_active ? 'checked' : ''} data-idx="${idx}" data-field="salary-active" class="h-4 w-4">
+                Active
+            </label>
+        `;
+        container.appendChild(div);
+    });
+}
+
+document.getElementById('save-salary-btn').addEventListener('click', async () => {
+    const container = document.getElementById('salary-components-container');
+    const components = currentSettings.salary_components.map((c, idx) => {
+        const labelInput = container.querySelector(`input[data-idx="${idx}"][data-field="salary-label"]`);
+        const activeInput = container.querySelector(`input[data-idx="${idx}"][data-field="salary-active"]`);
+        return {
+            key: c.key,
+            label: labelInput ? labelInput.value.trim() : c.label,
+            is_active: activeInput ? activeInput.checked : c.is_active,
+        };
+    });
+    try {
+        const res = await fetch(`${API_BASE}/settings/salary`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ salary_components: components })
+        });
+        if (res.ok) {
+            currentSettings = await res.json();
+            renderSalaryComponents();
+            alert('Salary config saved!');
+        } else { const r = await res.json(); alert(r.error || 'Failed'); }
+    } catch (e) { alert('Error: ' + e.message); }
+});
+
+// ==================== HIERARCHY VALUE MANAGEMENT CARDS ====================
+function renderHierarchyCards() {
+    const container = document.getElementById('hierarchy-cards');
+    const fields = (currentSettings.hierarchy_fields || []).filter(f => f.is_active);
+    container.innerHTML = '';
+
+    fields.forEach((field) => {
+        const card = document.createElement('a');
+        card.href = `/hr/${WORKSPACE_ID}/hierarchy/${field.key}`;
+        card.className = 'settings-nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl';
+        card.innerHTML = `
+            <div class="bg-blue-100 p-4 rounded-full mb-4">
+                <svg class="h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Manage ${field.label}</h3>
+            <p class="text-gray-600 text-center text-sm">Create, edit, and archive ${field.label.toLowerCase()} values</p>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// ==================== INIT ====================
+loadShiftSettings();
+renderHierarchyFields();
+renderSalaryComponents();
+renderHierarchyCards();
 </script>
 {% endblock %}

@@ -2,6 +2,9 @@
 HR Portal Blueprint - Workspace-scoped HR management
 All routes require login and workspace context.
 URL pattern: /hr/<workspace_id>/...
+
+Supports dynamic hierarchy fields, configurable salary components,
+auto-generated employee codes, and dynamic contact info.
 """
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, current_app
@@ -18,10 +21,7 @@ hr_portal_bp = Blueprint('hr_portal', __name__,
 # ==================== ACCESS CONTROL ====================
 
 def _check_workspace_access(workspace_id: str):
-    """
-    Verify current user has access to this workspace.
-    Returns (membership, error_response) tuple.
-    """
+    """Verify current user has access to this workspace."""
     membership = WorkspaceMembership.get_membership(current_user.id, workspace_id)
     if not membership or not membership.is_active:
         return None, (jsonify({"error": "You don't have access to this workspace"}), 403)
@@ -29,10 +29,7 @@ def _check_workspace_access(workspace_id: str):
 
 
 def _check_workspace_admin(workspace_id: str):
-    """
-    Verify current user is admin/manager of this workspace.
-    Returns (membership, error_response) tuple.
-    """
+    """Verify current user is admin/manager of this workspace."""
     membership = WorkspaceMembership.get_membership(current_user.id, workspace_id)
     if not membership or not membership.is_active:
         return None, (jsonify({"error": "You don't have access to this workspace"}), 403)
@@ -50,30 +47,36 @@ def hr_home(workspace_id):
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err
-
     stats = HRService.get_dashboard_stats(workspace_id)
+    settings = HRService.get_settings(workspace_id)
     return render_template('hr_dashboard.html',
                            workspace_id=workspace_id,
                            stats=stats,
+                           settings=settings,
                            user=current_user)
 
 
-@hr_portal_bp.route('/<workspace_id>/departments')
+@hr_portal_bp.route('/<workspace_id>/hierarchy/<field_key>')
 @login_required
-def manage_departments(workspace_id):
+def manage_hierarchy_values(workspace_id, field_key):
+    """Generic hierarchy value management page"""
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err
-    return render_template('departments.html', workspace_id=workspace_id, user=current_user)
-
-
-@hr_portal_bp.route('/<workspace_id>/manpower-types')
-@login_required
-def manage_manpower_types(workspace_id):
-    membership, err = _check_workspace_access(workspace_id)
-    if err:
-        return err
-    return render_template('manpower_types.html', workspace_id=workspace_id, user=current_user)
+    settings = HRService.get_settings(workspace_id)
+    # Find the field config to get its label
+    field_config = None
+    for f in settings.get('hierarchy_fields', []):
+        if f['key'] == field_key:
+            field_config = f
+            break
+    if not field_config:
+        return jsonify({"error": f"Hierarchy field '{field_key}' not found"}), 404
+    return render_template('hierarchy_values.html',
+                           workspace_id=workspace_id,
+                           field_key=field_key,
+                           field_label=field_config['label'],
+                           user=current_user)
 
 
 @hr_portal_bp.route('/<workspace_id>/attendance')
@@ -95,7 +98,11 @@ def hr_settings(workspace_id):
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err
-    return render_template('hr_settings.html', workspace_id=workspace_id, user=current_user)
+    settings = HRService.get_settings(workspace_id)
+    return render_template('hr_settings.html',
+                           workspace_id=workspace_id,
+                           settings=settings,
+                           user=current_user)
 
 
 @hr_portal_bp.route('/<workspace_id>/reports')
@@ -113,7 +120,11 @@ def manage_workers(workspace_id):
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err
-    return render_template('hr_addworker.html', workspace_id=workspace_id, user=current_user)
+    settings = HRService.get_settings(workspace_id)
+    return render_template('hr_addworker.html',
+                           workspace_id=workspace_id,
+                           settings=settings,
+                           user=current_user)
 
 
 @hr_portal_bp.route('/<workspace_id>/cost-analytics')
@@ -125,125 +136,92 @@ def cost_analytics(workspace_id):
     return render_template('hr_cost_analytics.html', workspace_id=workspace_id, user=current_user)
 
 
-# ==================== DEPARTMENT API ====================
+# ==================== HIERARCHY VALUES API ====================
 
-@hr_portal_bp.route('/<workspace_id>/api/departments', methods=['GET'])
+@hr_portal_bp.route('/<workspace_id>/api/hierarchy/<field_key>', methods=['GET'])
 @login_required
-def get_departments(workspace_id):
+def get_hierarchy_values(workspace_id, field_key):
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err
     try:
-        depts = HRService.get_departments(workspace_id)
-        return jsonify(depts), 200
+        values = HRService.get_hierarchy_values(workspace_id, field_key)
+        return jsonify(values), 200
     except Exception as e:
-        return jsonify({"error": f"Failed to load departments: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to load values: {str(e)}"}), 500
 
 
-@hr_portal_bp.route('/<workspace_id>/api/departments', methods=['POST'])
+@hr_portal_bp.route('/<workspace_id>/api/hierarchy/<field_key>', methods=['POST'])
 @login_required
-def create_department(workspace_id):
+def create_hierarchy_value(workspace_id, field_key):
     membership, err = _check_workspace_admin(workspace_id)
     if err:
         return err
     try:
         data = request.get_json()
-        dept, error = HRService.create_department(
+        value, error = HRService.create_hierarchy_value(
             workspace_id=workspace_id,
+            field_key=field_key,
             name=data.get('name', ''),
             created_by=current_user.email,
-            head=data.get('head', ''),
             description=data.get('description', ''),
         )
         if error:
             return jsonify({"error": error}), 400
-        return jsonify({"message": "Department created successfully", "department": dept}), 201
+        return jsonify({"message": "Value created successfully", "value": value}), 201
     except Exception as e:
-        return jsonify({"error": f"Failed to create department: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to create value: {str(e)}"}), 500
 
 
-@hr_portal_bp.route('/<workspace_id>/api/departments/<dept_id>', methods=['PUT'])
+@hr_portal_bp.route('/<workspace_id>/api/hierarchy/<field_key>/<value_id>', methods=['PUT'])
 @login_required
-def update_department(workspace_id, dept_id):
+def update_hierarchy_value(workspace_id, field_key, value_id):
     membership, err = _check_workspace_admin(workspace_id)
     if err:
         return err
     try:
         data = request.get_json()
-        success, error = HRService.update_department(
-            dept_id=dept_id,
+        success, error = HRService.update_hierarchy_value(
+            value_id=value_id,
             workspace_id=workspace_id,
             name=data.get('name', ''),
             updated_by=current_user.email,
-            head=data.get('head', ''),
             description=data.get('description', ''),
         )
         if error:
-            return jsonify({"error": error}), 400 if not success else 404
-        return jsonify({"message": "Department updated successfully"}), 200
+            return jsonify({"error": error}), 400
+        return jsonify({"message": "Value updated successfully"}), 200
     except Exception as e:
-        return jsonify({"error": f"Failed to update department: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to update value: {str(e)}"}), 500
 
 
-@hr_portal_bp.route('/<workspace_id>/api/departments/<dept_id>', methods=['DELETE'])
+@hr_portal_bp.route('/<workspace_id>/api/hierarchy/<field_key>/<value_id>', methods=['DELETE'])
 @login_required
-def delete_department(workspace_id, dept_id):
+def delete_hierarchy_value(workspace_id, field_key, value_id):
     membership, err = _check_workspace_admin(workspace_id)
     if err:
         return err
     try:
-        success, error = HRService.archive_department(dept_id, workspace_id, current_user.email)
+        success, error = HRService.archive_hierarchy_value(value_id, workspace_id, current_user.email)
         if error:
             return jsonify({"error": error}), 404
-        return jsonify({"message": "Department archived successfully"}), 200
+        return jsonify({"message": "Value archived successfully"}), 200
     except Exception as e:
-        return jsonify({"error": f"Failed to delete department: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to archive value: {str(e)}"}), 500
 
 
-# ==================== MANPOWER TYPES API ====================
-
-@hr_portal_bp.route('/<workspace_id>/api/manpower-types', methods=['GET'])
+@hr_portal_bp.route('/<workspace_id>/api/hierarchy-all', methods=['GET'])
 @login_required
-def get_manpower_types(workspace_id):
+def get_all_hierarchy_values(workspace_id):
+    """Get all hierarchy values grouped by field_key"""
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err
     try:
-        types = HRService.get_manpower_types(workspace_id)
-        return jsonify(types), 200
+        grouped = HRService.get_all_hierarchy_values(workspace_id)
+        return jsonify(grouped), 200
     except Exception as e:
-        return jsonify({"error": f"Failed to load manpower types: {str(e)}"}), 500
-
-
-@hr_portal_bp.route('/<workspace_id>/api/manpower-types', methods=['POST'])
-@login_required
-def create_manpower_type(workspace_id):
-    membership, err = _check_workspace_admin(workspace_id)
-    if err:
-        return err
-    try:
-        data = request.get_json()
-        mt, error = HRService.create_manpower_type(workspace_id, data.get('name', ''), current_user.email)
-        if error:
-            return jsonify({"error": error}), 400
-        return jsonify({"message": "Manpower type created successfully", "type": mt}), 201
-    except Exception as e:
-        return jsonify({"error": f"Failed to create manpower type: {str(e)}"}), 500
-
-
-@hr_portal_bp.route('/<workspace_id>/api/manpower-types/<type_id>', methods=['DELETE'])
-@login_required
-def delete_manpower_type(workspace_id, type_id):
-    membership, err = _check_workspace_admin(workspace_id)
-    if err:
-        return err
-    try:
-        success, error = HRService.archive_manpower_type(type_id, workspace_id, current_user.email)
-        if error:
-            return jsonify({"error": error}), 404
-        return jsonify({"message": "Manpower type archived successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": f"Failed to delete manpower type: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to load hierarchy values: {str(e)}"}), 500
 
 
 # ==================== WORKER API ====================
@@ -349,7 +327,6 @@ def bulk_upload_workers(workspace_id):
         workers_data = data.get('workers', [])
         if not workers_data or not isinstance(workers_data, list):
             return jsonify({"error": "workers array is required"}), 400
-
         results = HRService.bulk_upload_workers(workspace_id, workers_data, current_user.email)
         return jsonify(results), 200
     except Exception as e:
@@ -361,7 +338,6 @@ def bulk_upload_workers(workspace_id):
 @hr_portal_bp.route('/<workspace_id>/api/v1/attendance', methods=['POST'])
 @login_required
 def create_attendance(workspace_id):
-    """Create/update attendance for a worker"""
     membership, err = _check_workspace_admin(workspace_id)
     if err:
         return err
@@ -373,7 +349,6 @@ def create_attendance(workspace_id):
         if error:
             return jsonify({"error": error}), 400
 
-        # Send email if needed
         if metadata.get('should_send_email'):
             email_sent = HRService.send_attendance_notification(
                 workspace_id=workspace_id,
@@ -386,7 +361,6 @@ def create_attendance(workspace_id):
             )
             metadata['email_sent'] = email_sent
 
-        # Build response message
         if metadata['is_frozen'] and metadata['should_send_email']:
             message = f"Frozen date attendance updated - notification {'sent' if metadata.get('email_sent') else 'failed'}"
         elif metadata['is_frozen']:
@@ -430,7 +404,6 @@ def get_worker_attendance(workspace_id, employee_code, date):
 @hr_portal_bp.route('/<workspace_id>/api/v1/attendance/date/<date>', methods=['GET'])
 @login_required
 def get_attendance_by_date(workspace_id, date):
-    """Get all attendance for a date (auto-marks absent)"""
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err
@@ -439,7 +412,6 @@ def get_attendance_by_date(workspace_id, date):
             datetime.strptime(date, '%Y-%m-%d')
         except ValueError:
             return jsonify({"error": "date must be in YYYY-MM-DD format"}), 400
-
         records = HRService.get_attendance_by_date(workspace_id, date)
         return jsonify(records), 200
     except Exception as e:
@@ -457,7 +429,6 @@ def get_daily_summary(workspace_id, date):
             datetime.strptime(date, '%Y-%m-%d')
         except ValueError:
             return jsonify({"error": "date must be in YYYY-MM-DD format"}), 400
-
         summary = HRService.get_daily_summary(workspace_id, date)
         return jsonify(summary), 200
     except Exception as e:
@@ -481,18 +452,55 @@ def get_settings(workspace_id):
 
 @hr_portal_bp.route('/<workspace_id>/api/v1/settings', methods=['POST'])
 @login_required
-def update_settings(workspace_id):
+def update_shift_settings(workspace_id):
+    """Update shift-related settings"""
     membership, err = _check_workspace_admin(workspace_id)
     if err:
         return err
     try:
         data = request.get_json()
-        settings, error = HRService.update_settings(workspace_id, data, current_user.email)
+        settings, error = HRService.update_shift_settings(workspace_id, data, current_user.email)
         if error:
             return jsonify({"error": error}), 400
         return jsonify(settings), 200
     except Exception as e:
         return jsonify({"error": f"Failed to update settings: {str(e)}"}), 500
+
+
+@hr_portal_bp.route('/<workspace_id>/api/v1/settings/hierarchy', methods=['POST'])
+@login_required
+def update_hierarchy_config(workspace_id):
+    """Update hierarchy field configuration"""
+    membership, err = _check_workspace_admin(workspace_id)
+    if err:
+        return err
+    try:
+        data = request.get_json()
+        hierarchy_fields = data.get('hierarchy_fields', [])
+        settings, error = HRService.update_hierarchy_config(workspace_id, hierarchy_fields, current_user.email)
+        if error:
+            return jsonify({"error": error}), 400
+        return jsonify(settings), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to update hierarchy config: {str(e)}"}), 500
+
+
+@hr_portal_bp.route('/<workspace_id>/api/v1/settings/salary', methods=['POST'])
+@login_required
+def update_salary_config(workspace_id):
+    """Update salary component configuration"""
+    membership, err = _check_workspace_admin(workspace_id)
+    if err:
+        return err
+    try:
+        data = request.get_json()
+        salary_components = data.get('salary_components', [])
+        settings, error = HRService.update_salary_config(workspace_id, salary_components, current_user.email)
+        if error:
+            return jsonify({"error": error}), 400
+        return jsonify(settings), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to update salary config: {str(e)}"}), 500
 
 
 # ==================== COST ANALYTICS API ====================
@@ -560,7 +568,6 @@ def get_worker_cost(workspace_id):
         end_date = request.args.get('end_date')
         if not employee_code or not start_date or not end_date:
             return jsonify({"error": "employee_code, start_date and end_date are required"}), 400
-
         result = HRService.get_worker_cost(workspace_id, employee_code, start_date, end_date)
         if not result:
             return jsonify({"error": f"No cost data found for {employee_code}"}), 404
@@ -587,7 +594,6 @@ def get_workers_list_for_analytics(workspace_id):
 @hr_portal_bp.route('/<workspace_id>/api/reports/summary', methods=['GET'])
 @login_required
 def get_summary_report(workspace_id):
-    """Get attendance summary report for a date range"""
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err

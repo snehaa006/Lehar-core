@@ -6,676 +6,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Worker Management - HR System</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #ffffff;
-            min-height: 100vh;
-            padding: 24px;
-            color: #0f172a;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            margin-bottom: 32px;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 4px;
-        }
-
-        .header p {
-            color: #334155;
-            font-size: 14px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 420px 1fr;
-            gap: 24px;
-        }
-
-        .card {
-            background: #f1f5f9;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-            padding: 24px;
-            border: 1px solid #cbd5e1;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 20px;
-        }
-
-        .form-section {
-            background: white;
-            padding: 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            border: 1px solid #cbd5e1;
-        }
-
-        .form-section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #cbd5e1;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #1e293b;
-            margin-bottom: 6px;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 10px 12px;
-            font-size: 14px;
-            border: 1px solid #94a3b8;
-            border-radius: 6px;
-            transition: border-color 0.2s;
-            font-family: inherit;
-            color: #0f172a;
-            background: white;
-        }
-
-        select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231e293b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-color: white;
-            padding-right: 36px;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #0f172a;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 11px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            color: white;
-            background: #0f172a;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-bottom: 0;
-        }
-
-        .btn:hover:not(:disabled) {
-            background: #020617;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: #475569;
-            width: 100%;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: #334155;
-        }
-
-        .btn-small {
-            padding: 7px 12px;
-            font-size: 13px;
-            width: auto;
-        }
-
-        .btn-success {
-            background: #10b981;
-        }
-
-        .btn-success:hover:not(:disabled) {
-            background: #059669;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-        }
-
-        .btn-danger:hover:not(:disabled) {
-            background: #dc2626;
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            font-size: 13px;
-            display: none;
-        }
-
-        .alert.show {
-            display: block;
-        }
-
-        .alert-success {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #86efac;
-        }
-
-        .alert-error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
-        }
-
-        .alert-info {
-            background: #eff6ff;
-            color: #1e40af;
-            border: 1px solid #93c5fd;
-        }
-
-        .search-box {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .search-box input {
-            padding-left: 36px;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #475569;
-            font-size: 14px;
-        }
-
-        .worker-list {
-            max-height: 700px;
-            overflow-y: auto;
-        }
-
-        .worker-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 14px;
-            border: 1px solid #94a3b8;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            transition: all 0.2s;
-            background: white;
-        }
-
-        .worker-item:hover {
-            border-color: #64748b;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .worker-info {
-            flex: 1;
-        }
-
-        .worker-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-
-        .worker-name {
-            font-size: 15px;
-            font-weight: 500;
-            color: #0f172a;
-        }
-
-        .worker-code {
-            font-size: 12px;
-            background: #e2e8f0;
-            color: #334155;
-            padding: 2px 8px;
-            border-radius: 3px;
-        }
-
-        .worker-meta {
-            display: flex;
-            gap: 12px;
-            font-size: 13px;
-            color: #334155;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-        }
-
-        .worker-salary {
-            font-size: 13px;
-            color: #166534;
-            font-weight: 500;
-        }
-
-        .worker-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 6px;
-        }
-
-        .delete-btn {
-            padding: 6px 14px;
-            font-size: 13px;
-            color: #dc2626;
-            background: white;
-            border: 1px solid #fca5a5;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .delete-btn:hover {
-            background: #fef2f2;
-            border-color: #dc2626;
-        }
-
-        .edit-btn {
-            padding: 6px 14px;
-            font-size: 13px;
-            color: #1e40af;
-            background: white;
-            border: 1px solid #93c5fd;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .edit-btn:hover {
-            background: #eff6ff;
-            border-color: #1e40af;
-        }
-
-        .history-btn {
-            padding: 6px 14px;
-            font-size: 13px;
-            color: #7c2d12;
-            background: white;
-            border: 1px solid #fed7aa;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .history-btn:hover {
-            background: #fffbeb;
-            border-color: #7c2d12;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 48px 20px;
-            color: #475569;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .stat {
-            background: white;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
-            border: 1px solid #cbd5e1;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #0f172a;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #334155;
-            margin-top: 2px;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.6s linear infinite;
-            margin-right: 6px;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            overflow: auto;
-        }
-
-        .modal.show {
-            display: block;
-        }
-
-        .modal-content {
-            background: white;
-            margin: 2% auto;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 95%;
-            max-width: 1200px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #cbd5e1;
-            padding-bottom: 16px;
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #0f172a;
-        }
-
-        .close-btn {
-            font-size: 28px;
-            font-weight: bold;
-            color: #94a3b8;
-            cursor: pointer;
-            border: none;
-            background: none;
-        }
-
-        .close-btn:hover {
-            color: #0f172a;
-        }
-
-        .modal-body {
-            margin-bottom: 20px;
-        }
-
-        .history-item {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .history-version {
-            font-size: 12px;
-            background: #dbeafe;
-            color: #1e40af;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-weight: 600;
-        }
-
-        .history-date {
-            font-size: 12px;
-            color: #475569;
-        }
-
-        .history-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            font-size: 13px;
-        }
-
-        .history-detail-item {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .history-detail-label {
-            color: #475569;
-        }
-
-        .history-detail-value {
-            color: #0f172a;
-            font-weight: 500;
-        }
-
-        .csv-preview-table .warning-row {
-            background: #fffbeb;
-        }
-
-        .validation-badge.warning {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .edit-mode-banner {
-            background: #eff6ff;
-            border: 1px solid #93c5fd;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 16px;
-        }
-
-        .edit-mode-banner h3 {
-            font-size: 14px;
-            color: #1e40af;
-            margin-bottom: 8px;
-        }
-
-        .edit-mode-banner p {
-            font-size: 13px;
-            color: #1e40af;
-            margin-bottom: 8px;
-        }
-
-        .edit-mode-banner button {
-            background: #1e40af;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .edit-mode-banner button:hover {
-            background: #1e3a8a;
-        }
-
-        .hint {
-            color: #475569;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-
-        /* CSV Preview Table Styles */
-        .csv-preview-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 16px;
-            font-size: 13px;
-        }
-
-        .csv-preview-table th {
-            background: #f1f5f9;
-            padding: 12px 8px;
-            text-align: left;
-            font-weight: 600;
-            color: #0f172a;
-            border: 1px solid #cbd5e1;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .csv-preview-table td {
-            padding: 10px 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .csv-preview-table tr:hover {
-            background: #f8fafc;
-        }
-
-        .csv-preview-table .error-row {
-            background: #fef2f2;
-        }
-
-        .csv-preview-table .error-cell {
-            color: #dc2626;
-            font-weight: 500;
-        }
-
-        .csv-preview-table .valid-row {
-            background: #f0fdf4;
-        }
-
-        .validation-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .validation-badge.valid {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .validation-badge.error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .csv-stats {
-            display: flex;
-            gap: 24px;
-            padding: 16px;
-            background: #f8fafc;
-            border-radius: 6px;
-            margin-bottom: 16px;
-        }
-
-        .csv-stat {
-            text-align: center;
-        }
-
-        .csv-stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #0f172a;
-        }
-
-        .csv-stat-label {
-            font-size: 12px;
-            color: #475569;
-            margin-top: 4px;
-        }
-
-        .bulk-upload-banner {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 16px;
-        }
-
-        @media (max-width: 1024px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .worker-item {
-                flex-direction: column;
-            }
-
-            .worker-actions {
-                width: 100%;
-            }
-
-            .btn-group {
-                width: 100%;
-            }
-
-            .btn-group button {
-                flex: 1;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #ffffff; min-height: 100vh; padding: 24px; color: #0f172a; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { margin-bottom: 32px; }
+        .header h1 { font-size: 28px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+        .header p { color: #334155; font-size: 14px; }
+        .grid { display: grid; grid-template-columns: 420px 1fr; gap: 24px; }
+        .card { background: #f1f5f9; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); padding: 24px; border: 1px solid #cbd5e1; }
+        .section-title { font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 20px; }
+        .form-section { background: white; padding: 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #cbd5e1; }
+        .form-section-title { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #cbd5e1; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 13px; font-weight: 500; color: #1e293b; margin-bottom: 6px; }
+        input, select, textarea { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #94a3b8; border-radius: 6px; transition: border-color 0.2s; font-family: inherit; color: #0f172a; background: white; }
+        select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231e293b' d='M6 9L1 4h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-color: white; padding-right: 36px; }
+        textarea { resize: vertical; min-height: 80px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #0f172a; }
+        .btn { width: 100%; padding: 11px 16px; font-size: 14px; font-weight: 500; color: white; background: #0f172a; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .btn:hover:not(:disabled) { background: #020617; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: #475569; width: 100%; }
+        .btn-secondary:hover:not(:disabled) { background: #334155; }
+        .btn-small { padding: 7px 12px; font-size: 13px; width: auto; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover:not(:disabled) { background: #059669; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover:not(:disabled) { background: #dc2626; }
+        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; display: none; }
+        .alert.show { display: block; }
+        .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+        .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+        .search-box { margin-bottom: 20px; position: relative; }
+        .search-box input { padding-left: 36px; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #475569; font-size: 14px; }
+        .worker-list { max-height: 700px; overflow-y: auto; }
+        .worker-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 14px; border: 1px solid #94a3b8; border-radius: 6px; margin-bottom: 8px; transition: all 0.2s; background: white; }
+        .worker-item:hover { border-color: #64748b; }
+        .worker-info { flex: 1; }
+        .worker-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .worker-name { font-size: 15px; font-weight: 500; color: #0f172a; }
+        .worker-code { font-size: 12px; background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 3px; }
+        .worker-meta { display: flex; gap: 12px; font-size: 13px; color: #334155; margin-bottom: 6px; flex-wrap: wrap; }
+        .worker-salary { font-size: 13px; color: #166534; font-weight: 500; }
+        .worker-actions { display: flex; flex-direction: column; gap: 6px; }
+        .btn-group { display: flex; gap: 6px; }
+        .delete-btn { padding: 6px 14px; font-size: 13px; color: #dc2626; background: white; border: 1px solid #fca5a5; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .delete-btn:hover { background: #fef2f2; border-color: #dc2626; }
+        .edit-btn { padding: 6px 14px; font-size: 13px; color: #1e40af; background: white; border: 1px solid #93c5fd; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .edit-btn:hover { background: #eff6ff; border-color: #1e40af; }
+        .history-btn { padding: 6px 14px; font-size: 13px; color: #7c2d12; background: white; border: 1px solid #fed7aa; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .history-btn:hover { background: #fffbeb; border-color: #7c2d12; }
+        .empty-state { text-align: center; padding: 48px 20px; color: #475569; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat { background: white; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #cbd5e1; }
+        .stat-value { font-size: 24px; font-weight: 600; color: #0f172a; }
+        .stat-label { font-size: 12px; color: #334155; margin-top: 2px; }
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.6s linear infinite; margin-right: 6px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto; }
+        .modal.show { display: block; }
+        .modal-content { background: white; margin: 2% auto; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #cbd5e1; padding-bottom: 16px; }
+        .modal-title { font-size: 20px; font-weight: 600; color: #0f172a; }
+        .close-btn { font-size: 28px; font-weight: bold; color: #94a3b8; cursor: pointer; border: none; background: none; }
+        .close-btn:hover { color: #0f172a; }
+        .history-item { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .history-version { font-size: 12px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 3px; font-weight: 600; }
+        .hint { color: #475569; font-size: 12px; margin-top: 4px; }
+        .edit-mode-banner { background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
+        .edit-mode-banner h3 { font-size: 14px; color: #1e40af; margin-bottom: 8px; }
+        .edit-mode-banner p { font-size: 13px; color: #1e40af; margin-bottom: 8px; }
+        .edit-mode-banner button { background: #1e40af; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .contact-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .contact-row input { flex: 1; }
+        .contact-row button { flex-shrink: 0; }
+        .bulk-upload-banner { background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
+        @media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 
@@ -695,223 +103,78 @@
                 <div class="bulk-upload-banner">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <strong style="color: #166534;">📊 Bulk Upload Workers</strong>
-                            <p style="font-size: 12px; color: #166534; margin: 4px 0 0 0;">Upload multiple workers at
-                                once using CSV</p>
+                            <strong style="color: #166534;">Bulk Upload Workers</strong>
+                            <p style="font-size: 12px; color: #166534; margin: 4px 0 0 0;">Upload multiple workers using CSV</p>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                            <button type="button" class="btn btn-secondary btn-small" onclick="downloadCSVTemplate()">
-                                📥 Download Template
-                            </button>
-                            <button type="button" class="btn btn-small"
-                                onclick="document.getElementById('csvFileInput').click()">
-                                📤 Upload CSV
-                            </button>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="downloadCSVTemplate()">Download Template</button>
+                            <button type="button" class="btn btn-small" onclick="document.getElementById('csvFileInput').click()">Upload CSV</button>
                         </div>
                     </div>
-                    <input type="file" id="csvFileInput" accept=".csv" style="display: none;"
-                        onchange="handleCSVUpload(event)">
+                    <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
                 </div>
 
                 <div id="alertContainer"></div>
 
-                <!-- Edit Mode Banner -->
                 <div id="editModeBanner" class="edit-mode-banner" style="display: none;">
-                    <h3>✏️ Editing Worker</h3>
+                    <h3>Editing Worker</h3>
                     <p id="editingWorkerName"></p>
                     <button onclick="cancelEdit()">Cancel Edit</button>
                 </div>
 
                 <form id="workerForm">
-
-                    <!-- Add Form: Simple Fields Only -->
-                    <div id="addFormFields">
-                        <div class="form-section">
-                            <div class="form-section-title">Basic Information</div>
-
-                            <div class="form-group">
-                                <label for="operatorName">Worker Name <span style="color: #dc2626;">*</span></label>
-                                <input type="text" id="operatorName" placeholder="Enter worker name" required />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="employeeCode">Employee Code <span style="color: #dc2626;">*</span></label>
-                                <input type="text" id="employeeCode" placeholder="e.g., EMP001" required maxlength="50"
-                                    style="text-transform: uppercase;" />
-                                <div class="hint">Unique identifier. Cannot be changed later.</div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="designation">Designation <span style="color: #dc2626;">*</span></label>
-                                <select id="designation" disabled>
-                                    <option value="">Loading...</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="department">Department <span style="color: #dc2626;">*</span></label>
-                                <select id="department" disabled>
-                                    <option value="">Loading...</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="mobileNumber">Mobile Number</label>
-                                <input type="text" id="mobileNumber" placeholder="10 digit mobile number (optional)"
-                                    maxlength="10" />
-                                <div class="hint">Optional - 10 digits if provided</div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="esiNumber">ESI Number <span style="color: #dc2626;">*</span></label>
-                                <input type="text" id="esiNumber" placeholder="ESI number" required />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="dateOfJoining">Date of Joining <span
-                                        style="color: #dc2626;">*</span></label>
-                                <input type="date" id="dateOfJoining" required />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="coverage">Coverage <span style="color: #dc2626;">*</span></label>
-                                <input type="text" id="coverage" placeholder="e.g., Full-time, Part-time" required />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="basicSalary">Basic Salary <span style="color: #dc2626;">*</span></label>
-                                <input type="number" id="basicSalary" placeholder="Enter basic salary" min="0"
-                                    step="0.01" required />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="hra">HRA <span style="color: #dc2626;">*</span></label>
-                                <input type="number" id="hra" placeholder="Enter HRA" min="0" step="0.01" required />
-                                <div class="hint">House Rent Allowance</div>
-                            </div>
+                    <div class="form-section">
+                        <div class="form-section-title">Basic Information</div>
+                        <div class="form-group">
+                            <label for="operatorName">Worker Name <span style="color: #dc2626;">*</span></label>
+                            <input type="text" id="operatorName" placeholder="Enter worker name" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="employeeCode">Employee Code</label>
+                            <input type="text" id="employeeCode" placeholder="Auto-generated if empty (e.g., EMP-001)" maxlength="50" style="text-transform: uppercase;" />
+                            <div class="hint">Leave blank to auto-generate. Cannot be changed later.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dateOfJoining">Date of Joining <span style="color: #dc2626;">*</span></label>
+                            <input type="date" id="dateOfJoining" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="coverage">Coverage</label>
+                            <input type="text" id="coverage" placeholder="e.g., Full-time, Part-time" />
                         </div>
                     </div>
 
-                    <!-- Edit Form: Complete Fields -->
-                    <div id="editFormFields" style="display: none;">
-                        <div class="form-section">
-                            <div class="form-section-title">Basic Information</div>
-
-                            <div class="form-group">
-                                <label for="operatorNameEdit">Worker Name <span style="color: #dc2626;">*</span></label>
-                                <input type="text" id="operatorNameEdit" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="employeeCodeEdit">Employee Code</label>
-                                <input type="text" id="employeeCodeEdit" disabled />
-                                <div class="hint">Cannot be changed</div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="designationEdit">Designation <span style="color: #dc2626;">*</span></label>
-                                <select id="designationEdit"></select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="departmentEdit">Department <span style="color: #dc2626;">*</span></label>
-                                <select id="departmentEdit"></select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="mobileNumberEdit">Mobile Number</label>
-                                <input type="text" id="mobileNumberEdit" maxlength="10" />
-                                <div class="hint">Optional - 10 digits if provided</div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="esiNumberEdit">ESI Number <span style="color: #dc2626;">*</span></label>
-                                <input type="text" id="esiNumberEdit" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="dateOfJoiningEdit">Date of Joining <span
-                                        style="color: #dc2626;">*</span></label>
-                                <input type="date" id="dateOfJoiningEdit" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="coverageEdit">Coverage <span style="color: #dc2626;">*</span></label>
-                                <input type="text" id="coverageEdit" />
-                            </div>
-                        </div>
-
-                        <!-- Salary Update Section (Optional) -->
-                        <div class="form-section">
-                            <div class="form-section-title">Update Salary (Optional)</div>
-                            <div class="hint">Leave blank to keep current salary</div>
-
-                            <div class="form-group">
-                                <label for="basicSalaryEdit">New Basic Salary</label>
-                                <input type="number" id="basicSalaryEdit" min="0" step="0.01"
-                                    placeholder="Leave blank to keep current" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="hraEdit">New HRA</label>
-                                <input type="number" id="hraEdit" min="0" step="0.01"
-                                    placeholder="Leave blank to keep current" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="bonusEdit">One-time Bonus</label>
-                                <input type="number" id="bonusEdit" min="0" step="0.01"
-                                    placeholder="Optional bonus amount" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="effectiveDate">Effective Date</label>
-                                <input type="date" id="effectiveDate" />
-                                <div class="hint">When salary change takes effect</div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="changeReason">Reason for Change</label>
-                                <input type="text" id="changeReason"
-                                    placeholder="e.g., Annual increment, Promotion, Bonus" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="remarks">Remarks</label>
-                                <textarea id="remarks" placeholder="Additional notes about this change..."></textarea>
-                            </div>
-                        </div>
+                    <!-- Dynamic Hierarchy Fields -->
+                    <div class="form-section" id="hierarchySection">
+                        <div class="form-section-title">Organizational Hierarchy</div>
+                        <div id="hierarchyFieldsContainer"></div>
                     </div>
 
-                    <button type="submit" class="btn" id="submitBtn" disabled>
-                        Add Worker
-                    </button>
+                    <!-- Dynamic Contact Info -->
+                    <div class="form-section">
+                        <div class="form-section-title">Contact Information</div>
+                        <div id="contactFieldsContainer"></div>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="addContactField()" style="margin-top: 8px;">+ Add Contact Field</button>
+                    </div>
+
+                    <!-- Dynamic Salary Components -->
+                    <div class="form-section" id="salarySection">
+                        <div class="form-section-title" id="salaryTitle">Salary Components</div>
+                        <div id="salaryFieldsContainer"></div>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitBtn" disabled>Add Worker</button>
                 </form>
             </div>
 
             <!-- Worker List Card -->
             <div class="card">
                 <div class="section-title">All Workers</div>
-                <div class="stats">
-                    <div class="stat">
-                        <div class="stat-value" id="totalWorkers">0</div>
-                        <div class="stat-label">Workers</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="totalDepts">0</div>
-                        <div class="stat-label">Departments</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="totalDesigs">0</div>
-                        <div class="stat-label">Designations</div>
-                    </div>
-                </div>
-
+                <div class="stats" id="statsContainer"></div>
                 <div class="search-box">
-                    <span class="search-icon">🔍</span>
+                    <span class="search-icon">&#x1F50D;</span>
                     <input type="text" id="searchInput" placeholder="Search workers..." />
                 </div>
-
                 <div class="worker-list" id="workerList">
                     <div class="empty-state">Loading workers...</div>
                 </div>
@@ -929,922 +192,406 @@
                     <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
                 </div>
                 <div class="modal-body" id="historyContent">
-                    <div style="text-align: center; padding: 20px;">
-                        <span class="spinner"></span> Loading history...
-                    </div>
+                    <div style="text-align: center; padding: 20px;"><span class="spinner"></span> Loading...</div>
                 </div>
-                <div style="text-align: right;">
-                    <button class="btn btn-secondary btn-small" onclick="closeHistoryModal()">Close</button>
-                </div>
+                <div style="text-align: right;"><button class="btn btn-secondary btn-small" onclick="closeHistoryModal()">Close</button></div>
             </div>
         </div>
+    </div>
 
-        <!-- CSV Preview Modal -->
-        <div id="csvPreviewModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div>
-                        <h3 class="modal-title">📊 Bulk Upload Preview</h3>
-                        <small style="color: #475569;">Review and validate worker data before uploading</small>
-                    </div>
-                    <button class="close-btn" onclick="closeBulkPreviewModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="csv-stats">
-                        <div class="csv-stat">
-                            <div class="csv-stat-value" id="csvValidRows" style="color: #10b981;">0</div>
-                            <div class="csv-stat-label">Valid</div>
-                        </div>
-                        <div class="csv-stat">
-                            <div class="csv-stat-value" id="csvWarningRows" style="color: #f59e0b;">0</div>
-                            <div class="csv-stat-label">Warnings</div>
-                        </div>
-                        <div class="csv-stat">
-                            <div class="csv-stat-value" id="csvErrorRows" style="color: #ef4444;">0</div>
-                            <div class="csv-stat-label">Errors</div>
-                        </div>
-                    </div>
+    <script>
+        const API_BASE_URL = "/hr/{{ workspace_id }}/api";
+        const settingsData = {{ settings | tojson }};
+        const hierarchyFields = (settingsData.hierarchy_fields || []).filter(f => f.is_active);
+        const salaryComponents = (settingsData.salary_components || []).filter(c => c.is_active);
 
-                    <div id="csvErrorSummary"
-                        style="display: none; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
-                        <strong style="color: #991b1b;">⚠️ Validation Errors Found</strong>
-                        <ul id="csvErrorList" style="margin: 8px 0 0 20px; color: #991b1b; font-size: 13px;">
-                        </ul>
-                    </div>
+        let hierarchyValues = {};  // { field_key: [{name, id}, ...] }
+        let workers = [];
+        let currentEditingCode = null;
 
-                    <div id="csvWarningSummary"
-                        style="display: none; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
-                        <strong style="color: #92400e;">⚠️ Validation Warnings</strong>
-                        <p style="margin: 4px 0 0 0; color: #92400e; font-size: 13px;">Some records have warnings but
-                            can still be uploaded</p>
-                        <ul id="csvWarningList" style="margin: 8px 0 0 20px; color: #92400e; font-size: 13px;">
-                        </ul>
-                    </div>
+        function showAlert(message, type) {
+            const c = document.getElementById("alertContainer");
+            c.innerHTML = `<div class="alert alert-${type} show">${message}</div>`;
+            setTimeout(() => { c.innerHTML = ""; }, 3000);
+        }
 
-                    <div style="max-height: 500px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 6px;">
-                        <table class="csv-preview-table" id="csvPreviewTable">
-                            <thead>
-                                <tr>
-                                    <th style="width: 40px;">#</th>
-                                    <th>Status</th>
-                                    <th>Employee Code</th>
-                                    <th>Name</th>
-                                    <th>Mobile</th>
-                                    <th>ESI</th>
-                                    <th>DOJ</th>
-                                    <th>Coverage</th>
-                                    <th>Designation</th>
-                                    <th>Department</th>
-                                    <th>Basic Salary</th>
-                                    <th>HRA</th>
-                                    <th>Errors</th>
-                                </tr>
-                            </thead>
-                            <tbody id="csvPreviewBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                    <button class="btn btn-secondary btn-small" onclick="closeBulkPreviewModal()">Cancel</button>
-                    <button class="btn btn-success btn-small" id="confirmBulkUploadBtn" onclick="confirmBulkUpload()"
-                        disabled>
-                        <span id="bulkUploadBtnText">Upload Valid Records</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+        // ==================== BUILD DYNAMIC FORM ====================
+        function buildHierarchyDropdowns() {
+            const container = document.getElementById("hierarchyFieldsContainer");
+            container.innerHTML = '';
+            hierarchyFields.forEach(field => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `
+                    <label for="hierarchy_${field.key}">${field.label} <span style="color: #dc2626;">*</span></label>
+                    <select id="hierarchy_${field.key}" required disabled><option value="">Loading...</option></select>
+                `;
+                container.appendChild(div);
+            });
+        }
 
-        <script>
-            const API_BASE_URL = "/hr/{{ workspace_id }}/api";
-            let departments = [];
-            let designations = [];
-            let workers = [];
-            let currentEditingCode = null;
-            let bulkUploadData = [];
+        function buildSalaryInputs() {
+            const container = document.getElementById("salaryFieldsContainer");
+            container.innerHTML = '';
+            salaryComponents.forEach(comp => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `
+                    <label for="salary_${comp.key}">${comp.label} <span style="color: #dc2626;">*</span></label>
+                    <input type="number" id="salary_${comp.key}" placeholder="Enter ${comp.label}" min="0" step="0.01" required />
+                `;
+                container.appendChild(div);
+            });
+        }
 
-            function showAlert(message, type) {
-                const alertContainer = document.getElementById("alertContainer");
-                alertContainer.innerHTML = `<div class="alert alert-${type} show">${message}</div>`;
-                setTimeout(() => {
-                    alertContainer.innerHTML = "";
-                }, 3000);
-            }
+        function addContactField(label='', value='') {
+            const container = document.getElementById("contactFieldsContainer");
+            const row = document.createElement('div');
+            row.className = 'contact-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Label (e.g., Mobile)" value="${label}" class="contact-label" />
+                <input type="text" placeholder="Value" value="${value}" class="contact-value" />
+                <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()">x</button>
+            `;
+            container.appendChild(row);
+        }
 
-            async function fetchData() {
-                try {
-                    const [deptRes, desigRes, workerRes] = await Promise.all([
-                        fetch(`${API_BASE_URL}/departments`),
-                        fetch(`${API_BASE_URL}/manpower-types`),
-                        fetch(`${API_BASE_URL}/workers`)
-                    ]);
+        function getContactInfo() {
+            const rows = document.querySelectorAll('#contactFieldsContainer .contact-row');
+            const info = [];
+            rows.forEach(row => {
+                const label = row.querySelector('.contact-label').value.trim();
+                const value = row.querySelector('.contact-value').value.trim();
+                if (label && value) info.push({ label, value });
+            });
+            return info;
+        }
 
-                    departments = (await deptRes.json()).filter(d => d.is_active !== false);
-                    designations = (await desigRes.json()).filter(d => d.is_active !== false);
-                    workers = await workerRes.json();
+        function populateHierarchyDropdowns() {
+            hierarchyFields.forEach(field => {
+                const select = document.getElementById(`hierarchy_${field.key}`);
+                if (!select) return;
+                const values = hierarchyValues[field.key] || [];
+                select.innerHTML = `<option value="">Select ${field.label}</option>`;
+                values.forEach(v => {
+                    select.innerHTML += `<option value="${v.name}">${v.name}</option>`;
+                });
+                select.disabled = false;
+            });
+        }
 
-                    populateDropdowns();
-                    updateStats();
-                    renderWorkers();
+        // ==================== FETCH DATA ====================
+        async function fetchData() {
+            try {
+                // Fetch hierarchy values for all active fields
+                const hierarchyPromises = hierarchyFields.map(f =>
+                    fetch(`${API_BASE_URL}/hierarchy/${f.key}`).then(r => r.json()).then(data => ({ key: f.key, data }))
+                );
+                const workerPromise = fetch(`${API_BASE_URL}/workers`).then(r => r.json());
 
-                    // Enable dropdowns and add required attribute
-                    document.getElementById("designation").disabled = false;
-                    document.getElementById("designation").required = true;
-                    document.getElementById("department").disabled = false;
-                    document.getElementById("department").required = true;
-                    document.getElementById("designationEdit").disabled = false;
-                    document.getElementById("departmentEdit").disabled = false;
-                    document.getElementById("submitBtn").disabled = false;
+                const [workerRes, ...hierarchyResults] = await Promise.all([workerPromise, ...hierarchyPromises]);
+                workers = workerRes;
 
-                    // Make sure edit form fields don't have required when hidden
-                    document.getElementById("operatorNameEdit").required = false;
-                    document.getElementById("designationEdit").required = false;
-                    document.getElementById("departmentEdit").required = false;
-                    document.getElementById("mobileNumberEdit").required = false;
-                    document.getElementById("esiNumberEdit").required = false;
-                    document.getElementById("dateOfJoiningEdit").required = false;
-                    document.getElementById("coverageEdit").required = false;
-                } catch (error) {
-                    console.error("Error:", error);
-                    showAlert("Failed to load data", "error");
-                }
-            }
-
-            function populateDropdowns() {
-                const deptSelects = [document.getElementById("department"), document.getElementById("departmentEdit")];
-                const desigSelects = [document.getElementById("designation"), document.getElementById("designationEdit")];
-
-                deptSelects.forEach(select => {
-                    select.innerHTML = '<option value="">Select department</option>';
-                    departments.forEach(d => {
-                        select.innerHTML += `<option value="${d.name}">${d.name}</option>`;
-                    });
+                hierarchyResults.forEach(({ key, data }) => {
+                    hierarchyValues[key] = data.filter(d => d.is_active !== false);
                 });
 
-                desigSelects.forEach(select => {
-                    select.innerHTML = '<option value="">Select designation</option>';
-                    designations.forEach(d => {
-                        select.innerHTML += `<option value="${d.name}">${d.name}</option>`;
-                    });
+                populateHierarchyDropdowns();
+                updateStats();
+                renderWorkers();
+                document.getElementById("submitBtn").disabled = false;
+            } catch (error) {
+                console.error("Error:", error);
+                showAlert("Failed to load data", "error");
+            }
+        }
+
+        function updateStats() {
+            const container = document.getElementById("statsContainer");
+            let html = `<div class="stat"><div class="stat-value">${workers.length}</div><div class="stat-label">Workers</div></div>`;
+            hierarchyFields.forEach(field => {
+                const uniqueVals = new Set(workers.map(w => (w.hierarchy_values || {})[field.key]).filter(Boolean));
+                html += `<div class="stat"><div class="stat-value">${uniqueVals.size}</div><div class="stat-label">${field.label}</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderWorkers(list = workers) {
+            const wl = document.getElementById("workerList");
+            if (!list.length) { wl.innerHTML = '<div class="empty-state">No workers found</div>'; return; }
+
+            wl.innerHTML = list.map(w => {
+                const currentRem = w.remuneration?.history?.length ? w.remuneration.history[w.remuneration.history.length - 1] : {};
+                const components = currentRem.components || {};
+                let totalSalary = 0;
+                const salaryParts = salaryComponents.map(comp => {
+                    const val = parseFloat(components[comp.key] || 0);
+                    totalSalary += val;
+                    return `${comp.label}: ₹${val.toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
                 });
-            }
 
-            function updateStats() {
-                document.getElementById("totalWorkers").textContent = workers.length;
-                document.getElementById("totalDepts").textContent = new Set(workers.map(w => w.department)).size;
-                document.getElementById("totalDesigs").textContent = new Set(workers.map(w => w.designation)).size;
-            }
+                const hierMeta = hierarchyFields.map(f => (w.hierarchy_values || {})[f.key] || '').filter(Boolean).join(' · ');
+                const contactParts = (w.contact_info || []).map(c => `${c.label}: ${c.value}`).join(' · ');
 
-            function renderWorkers(list = workers) {
-                const workerList = document.getElementById("workerList");
-                if (list.length === 0) {
-                    workerList.innerHTML = '<div class="empty-state">No workers found</div>';
-                    return;
-                }
-
-                workerList.innerHTML = list.map(w => {
-                    const currentRemuneration = w.remuneration?.history[w.remuneration.history.length - 1] || {};
-                    const basicSalary = parseFloat(currentRemuneration.basic_salary || 0);
-                    const hra = parseFloat(currentRemuneration.hra || 0);
-                    const totalSalary = basicSalary + hra;
-
-                    return `
-<div class="worker-item">
+                return `<div class="worker-item">
 <div class="worker-info">
 <div class="worker-header">
 <span class="worker-name">${w.operator_name}</span>
 <span class="worker-code">${w.employee_code}</span>
 </div>
-<div class="worker-meta">
-<span>${w.designation}</span>
-<span>•</span>
-<span>${w.department}</span>
-${w.mobile_number ? `<span>•</span><span>📱 ${w.mobile_number}</span>` : ''}
-</div>
-<div class="worker-salary">
- Basic: ₹${basicSalary.toLocaleString('en-IN', { maximumFractionDigits: 2 })} + HRA: ₹${hra.toLocaleString('en-IN', { maximumFractionDigits: 2 })} = ₹${totalSalary.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-</div>
+<div class="worker-meta"><span>${hierMeta}</span></div>
+${contactParts ? `<div class="worker-meta" style="font-size:12px;color:#64748b;">${contactParts}</div>` : ''}
+<div class="worker-salary">${salaryParts.join(' + ')} = ₹${totalSalary.toLocaleString('en-IN', {maximumFractionDigits: 2})}</div>
 </div>
 <div class="worker-actions">
 <div class="btn-group">
 <button type="button" class="edit-btn" onclick="editWorker('${w.employee_code}')">Edit</button>
 <button type="button" class="history-btn" onclick="showSalaryHistory('${w.employee_code}', '${w.operator_name}')">History</button>
 </div>
-<button type="button" class="delete-btn" onclick="deleteWorker('${w.employee_code}', '${w.operator_name}')">
-Delete
-</button>
+<button type="button" class="delete-btn" onclick="deleteWorker('${w.employee_code}', '${w.operator_name}')">Delete</button>
 </div>
-</div>
-`;
-                }).join('');
-            }
+</div>`;
+            }).join('');
+        }
 
-            document.getElementById("searchInput").addEventListener("input", (e) => {
-                const query = e.target.value.toLowerCase();
-                const filtered = workers.filter(w =>
-                    w.operator_name.toLowerCase().includes(query) ||
-                    w.employee_code.toLowerCase().includes(query) ||
-                    w.department.toLowerCase().includes(query) ||
-                    w.designation.toLowerCase().includes(query) ||
-                    (w.mobile_number && w.mobile_number.includes(query))
-                );
-                renderWorkers(filtered);
+        document.getElementById("searchInput").addEventListener("input", (e) => {
+            const q = e.target.value.toLowerCase();
+            const filtered = workers.filter(w =>
+                w.operator_name.toLowerCase().includes(q) ||
+                w.employee_code.toLowerCase().includes(q) ||
+                JSON.stringify(w.hierarchy_values || {}).toLowerCase().includes(q) ||
+                JSON.stringify(w.contact_info || []).toLowerCase().includes(q)
+            );
+            renderWorkers(filtered);
+        });
+
+        // ==================== EDIT WORKER ====================
+        window.editWorker = async function(employeeCode) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/workers/${employeeCode}`);
+                if (!res.ok) { showAlert("Failed to load worker", "error"); return; }
+                const worker = await res.json();
+                currentEditingCode = employeeCode;
+
+                document.getElementById("operatorName").value = worker.operator_name;
+                document.getElementById("employeeCode").value = worker.employee_code;
+                document.getElementById("employeeCode").disabled = true;
+                document.getElementById("dateOfJoining").value = worker.date_of_joining || '';
+                document.getElementById("coverage").value = worker.coverage || '';
+
+                // Populate hierarchy dropdowns
+                hierarchyFields.forEach(f => {
+                    const select = document.getElementById(`hierarchy_${f.key}`);
+                    if (select) select.value = (worker.hierarchy_values || {})[f.key] || '';
+                });
+
+                // Populate contact info
+                const contactContainer = document.getElementById("contactFieldsContainer");
+                contactContainer.innerHTML = '';
+                (worker.contact_info || []).forEach(c => addContactField(c.label, c.value));
+
+                // Set salary fields to empty (leave blank to keep current)
+                salaryComponents.forEach(comp => {
+                    const input = document.getElementById(`salary_${comp.key}`);
+                    if (input) { input.value = ''; input.required = false; input.placeholder = 'Leave blank to keep current'; }
+                });
+
+                document.getElementById("salaryTitle").textContent = "Update Salary (Optional)";
+                document.getElementById("formTitle").textContent = "Edit Worker";
+                document.getElementById("submitBtn").textContent = "Update Worker";
+                document.getElementById("editModeBanner").style.display = "block";
+                document.getElementById("editingWorkerName").textContent = `${worker.operator_name} (${worker.employee_code})`;
+                document.querySelector(".card").scrollIntoView({ behavior: "smooth" });
+            } catch (error) { showAlert("Error loading worker", "error"); }
+        };
+
+        function cancelEdit() {
+            currentEditingCode = null;
+            document.getElementById("workerForm").reset();
+            document.getElementById("employeeCode").disabled = false;
+            document.getElementById("formTitle").textContent = "Add Worker";
+            document.getElementById("submitBtn").textContent = "Add Worker";
+            document.getElementById("salaryTitle").textContent = "Salary Components";
+            document.getElementById("editModeBanner").style.display = "none";
+            document.getElementById("contactFieldsContainer").innerHTML = '';
+            salaryComponents.forEach(comp => {
+                const input = document.getElementById(`salary_${comp.key}`);
+                if (input) { input.required = true; input.placeholder = `Enter ${comp.label}`; }
             });
-
-            // ==================== CSV TEMPLATE DOWNLOAD ====================
-            function downloadCSVTemplate() {
-                const csvContent = `EMP CODE,EMP_NAME,Deptt.,DESIGNATION,MOBILE NO,ESI NO.,DOJ,Coverage,BASIC,HRA
-101,John Doe,Production,Operator,9876543210,12345678,2024-01-15,Full-time,15000,3000
-102,Jane Smith,Quality,Supervisor,,12345679,2024-01-20,Part-time,20000,4000`;
-
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'worker_upload_template.csv';
-                a.click();
-                window.URL.revokeObjectURL(url);
-                showAlert("CSV template downloaded successfully", "success");
-            }
-
-            // ==================== CSV UPLOAD HANDLING ====================
-            function handleCSVUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const csvText = e.target.result;
-                    parseCSVAndPreview(csvText);
-                };
-                reader.readAsText(file);
-
-                // Reset file input
-                event.target.value = '';
-            }
-            function normalizeHeader(header) {
-                return header.trim().toLowerCase()
-                    .replace(/[.\s]+/g, '_')
-                    .replace(/[^a-z0-9_]/g, '');
-            }
-
-            function parseCSVAndPreview(csvText) {
-                const lines = csvText.split('\n').filter(line => line.trim());
-                if (lines.length < 2) {
-                    showAlert("CSV file is empty or invalid", "error");
-                    return;
-                }
-
-                // Parse and normalize headers
-                const rawHeaders = parseCSVLine(lines[0]);
-                const headers = rawHeaders.map(h => normalizeHeader(h));
-
-                // Header mapping to handle various column names
-                const headerMap = {
-                    'empcode': 'employee_code',
-                    'emp_code': 'employee_code',
-                    'empname': 'operator_name',
-                    'emp_name': 'operator_name',
-                    'deptt': 'department',
-                    'dept': 'department',
-                    'department': 'department',
-                    'designation': 'designation',
-                    'mobileno': 'mobile_number',
-                    'mobile_no': 'mobile_number',
-                    'mobile': 'mobile_number',
-                    'esino': 'esi_number',
-                    'esi_no': 'esi_number',
-                    'esi': 'esi_number',
-                    'doj': 'date_of_joining',
-                    'date_of_joining': 'date_of_joining',
-                    'coverage': 'coverage',
-                    'basic': 'basic_salary',
-                    'basic_salary': 'basic_salary',
-                    'hra': 'hra'
-                };
-
-                const mappedHeaders = headers.map(h => headerMap[h] || h);
-
-                const requiredFields = ['employee_code', 'operator_name', 'esi_number',
-                    'date_of_joining', 'coverage', 'designation', 'department',
-                    'basic_salary', 'hra'];
-
-                const missingHeaders = requiredFields.filter(h => !mappedHeaders.includes(h));
-                if (missingHeaders.length > 0) {
-                    showAlert(`Missing required columns: ${missingHeaders.join(', ')}`, "error");
-                    return;
-                }
-
-                bulkUploadData = [];
-                const existingCodes = new Set(workers.map(w => w.employee_code.toUpperCase()));
-
-                const validDesignationsLower = {};
-                designations.forEach(d => {
-                    const name = d.name.trim();
-                    validDesignationsLower[name.toLowerCase()] = name;
-                });
-
-                const validDepartmentsLower = {};
-                departments.forEach(d => {
-                    const name = d.name.trim();
-                    validDepartmentsLower[name.toLowerCase()] = name;
-                });
-
-                for (let i = 1; i < lines.length; i++) {
-                    const values = parseCSVLine(lines[i]);
-                    if (values.length < mappedHeaders.length) continue;
-
-                    const row = {};
-                    mappedHeaders.forEach((header, index) => {
-                        row[header] = values[index] ? values[index].trim() : '';
-                    });
-
-                    const errors = [];
-                    const warnings = [];
-                    const employeeCode = String(row.employee_code || '').trim().toUpperCase();
-
-                    // Validate employee code
-                    if (!employeeCode) {
-                        errors.push("Employee code required");
-                    } else if (existingCodes.has(employeeCode)) {
-                        errors.push("Employee code already exists");
-                    } else if (bulkUploadData.some(r => r.employee_code.toUpperCase() === employeeCode)) {
-                        errors.push("Duplicate in CSV");
-                    }
-
-                    // Validate name
-                    if (!row.operator_name || !row.operator_name.trim()) {
-                        errors.push("Name required");
-                    }
-
-                    // Validate mobile number (OPTIONAL)
-                    const mobileNumber = String(row.mobile_number || '').trim();
-                    if (mobileNumber) {
-                        const mobileDigits = mobileNumber.replace(/\D/g, '');
-                        if (mobileDigits.length !== 10) {
-                            errors.push("Mobile must be 10 digits");
-                        }
-                        row.mobile_number = mobileDigits;
-                    } else {
-                        row.mobile_number = '';  // Keep as empty string
-                    }
-
-                    // Validate ESI
-                    const esiNumber = String(row.esi_number || '').trim();
-                    if (!esiNumber) {
-                        errors.push("ESI number required");
-                    } else if (!/^\d+$/.test(esiNumber)) {
-                        errors.push("Invalid ESI (must be numeric)");
-                    }
-
-                    // Validate date
-                    const dojStr = String(row.date_of_joining || '').trim();
-                    if (!dojStr) {
-                        errors.push("Date of joining required");
-                    } else if (!isValidDate(dojStr)) {
-                        errors.push("Invalid date (use YYYY-MM-DD)");
-                    }
-
-                    // Validate coverage
-                    if (!row.coverage || !row.coverage.trim()) {
-                        errors.push("Coverage required");
-                    }
-
-                    // Validate designation
-                    const designationInput = String(row.designation || '').trim();
-                    const designationLower = designationInput.toLowerCase();
-                    if (!designationInput) {
-                        errors.push("Designation required");
-                    } else if (!validDesignationsLower[designationLower]) {
-                        errors.push(`Invalid designation '${designationInput}'`);
-                    }
-
-                    // Validate department
-                    const departmentInput = String(row.department || '').trim();
-                    const departmentLower = departmentInput.toLowerCase();
-                    if (!departmentInput) {
-                        errors.push("Department required");
-                    } else if (!validDepartmentsLower[departmentLower]) {
-                        errors.push(`Invalid department '${departmentInput}'`);
-                    }
-
-                    // Validate salary
-                    const basicSalary = parseFloat(row.basic_salary);
-                    const hra = parseFloat(row.hra);
-                    if (isNaN(basicSalary) || basicSalary < 0) {
-                        errors.push("Invalid basic salary");
-                    }
-                    if (isNaN(hra) || hra < 0) {
-                        errors.push("Invalid HRA");
-                    }
-
-                    const validDesignation = validDesignationsLower[designationLower];
-                    const validDepartment = validDepartmentsLower[departmentLower];
-
-                    bulkUploadData.push({
-                        employee_code: employeeCode,
-                        operator_name: (row.operator_name || '').trim(),
-                        mobile_number: row.mobile_number,
-                        esi_number: esiNumber,
-                        date_of_joining: dojStr,
-                        coverage: (row.coverage || '').trim(),
-                        designation: validDesignation || designationInput,
-                        department: validDepartment || departmentInput,
-                        basic_salary: basicSalary,
-                        hra: hra,
-                        errors: errors,
-                        warnings: warnings,
-                        isValid: errors.length === 0
-                    });
-                }
-
-                displayBulkPreview();
-            }
-            function parseCSVLine(line) {
-                const result = [];
-                let current = '';
-                let inQuotes = false;
-
-                for (let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        result.push(current);
-                        current = '';
-                    } else {
-                        current += char;
-                    }
-                }
-                result.push(current);
-                return result.map(val => val.replace(/^"|"$/g, '').trim());
-            }
-            function isValidDate(dateString) {
-                const regex = /^\d{4}-\d{2}-\d{2}$/;
-                if (!regex.test(dateString)) return false;
-                const date = new Date(dateString);
-                return date instanceof Date && !isNaN(date);
-            }
-
-            function displayBulkPreview() {
-                const modal = document.getElementById("csvPreviewModal");
-                const tbody = document.getElementById("csvPreviewBody");
-                const validRows = document.getElementById("csvValidRows");
-                const errorRows = document.getElementById("csvErrorRows");
-                const errorSummary = document.getElementById("csvErrorSummary");
-                const errorList = document.getElementById("csvErrorList");
-                const warningSummary = document.getElementById("csvWarningSummary");
-                const warningList = document.getElementById("csvWarningList");
-                const confirmBtn = document.getElementById("confirmBulkUploadBtn");
-
-                const validCount = bulkUploadData.filter(r => r.isValid && r.warnings.length === 0).length;
-                const warningCount = bulkUploadData.filter(r => r.isValid && r.warnings.length > 0).length;
-                const errorCount = bulkUploadData.filter(r => !r.isValid).length;
-
-                validRows.textContent = validCount;
-                document.getElementById("csvWarningRows").textContent = warningCount;
-                errorRows.textContent = errorCount;
-
-                // Show error summary
-                if (errorCount > 0) {
-                    errorSummary.style.display = 'block';
-                    errorList.innerHTML = bulkUploadData
-                        .filter(r => !r.isValid)
-                        .map((r, i) => {
-                            const rowIndex = bulkUploadData.indexOf(r) + 1;
-                            return `<li>Row ${rowIndex} (${r.employee_code || 'N/A'}): ${r.errors.join(', ')}</li>`;
-                        })
-                        .join('');
-                } else {
-                    errorSummary.style.display = 'none';
-                }
-
-                // Show warning summary
-                if (warningCount > 0) {
-                    warningSummary.style.display = 'block';
-                    warningList.innerHTML = bulkUploadData
-                        .filter(r => r.isValid && r.warnings.length > 0)
-                        .map((r) => {
-                            const rowIndex = bulkUploadData.indexOf(r) + 1;
-                            return `<li>Row ${rowIndex} (${r.employee_code}): ${r.warnings.join(', ')}</li>`;
-                        })
-                        .join('');
-                } else {
-                    warningSummary.style.display = 'none';
-                }
-
-                // Calculate uploadable count (valid + warnings)
-                const uploadableCount = validCount + warningCount;
-                confirmBtn.disabled = uploadableCount === 0;
-                document.getElementById("bulkUploadBtnText").textContent =
-                    uploadableCount > 0 ? `Upload ${uploadableCount} Record${uploadableCount > 1 ? 's' : ''}` : 'No Valid Records';
-
-                // Populate table
-                tbody.innerHTML = bulkUploadData.map((row, index) => {
-                    let rowClass, badge;
-                    if (!row.isValid) {
-                        rowClass = 'error-row';
-                        badge = '<span class="validation-badge error">✗ Error</span>';
-                    } else if (row.warnings.length > 0) {
-                        rowClass = 'warning-row';
-                        badge = '<span class="validation-badge warning">⚠ Warning</span>';
-                    } else {
-                        rowClass = 'valid-row';
-                        badge = '<span class="validation-badge valid">✓ Valid</span>';
-                    }
-
-                    const issues = [...row.errors, ...row.warnings].join('; ') || '-';
-
-                    return `
-<tr class="${rowClass}">
-<td>${index + 1}</td>
-<td>${badge}</td>
-<td>${row.employee_code}</td>
-<td>${row.operator_name}</td>
-<td>${row.mobile_number || '<em>Not provided</em>'}</td>
-<td>${row.esi_number}</td>
-<td>${row.date_of_joining}</td>
-<td>${row.coverage}</td>
-<td>${row.designation}</td>
-<td>${row.department}</td>
-<td>₹${isNaN(row.basic_salary) ? '-' : parseFloat(row.basic_salary).toLocaleString('en-IN')}</td>
-<td>₹${isNaN(row.hra) ? '-' : parseFloat(row.hra).toLocaleString('en-IN')}</td>
-<td class="${row.errors.length > 0 ? 'error-cell' : ''}">${issues}</td>
-</tr>
-`;
-                }).join('');
-
-                modal.classList.add('show');
-            }
-
-            function closeBulkPreviewModal() {
-                document.getElementById("csvPreviewModal").classList.remove("show");
-                bulkUploadData = [];
-            }
-
-            async function confirmBulkUpload() {
-                const confirmBtn = document.getElementById("confirmBulkUploadBtn");
-                const btnText = document.getElementById("bulkUploadBtnText");
-                const validRecords = bulkUploadData.filter(r => r.isValid);
-
-                if (validRecords.length === 0) {
-                    showAlert("No valid records to upload", "error");
-                    return;
-                }
-
-                confirmBtn.disabled = true;
-                btnText.innerHTML = '<span class="spinner"></span>Uploading...';
-
-                try {
-                    // Use the bulk upload API endpoint
-                    const payload = {
-                        workers: validRecords.map(record => ({
-                            operator_name: record.operator_name,
-                            employee_code: record.employee_code,
-                            mobile_number: record.mobile_number || '',  // Send empty string if not provided
-                            esi_number: record.esi_number,
-                            date_of_joining: record.date_of_joining,
-                            coverage: record.coverage,
-                            designation: record.designation,
-                            department: record.department,
-                            basic_salary: record.basic_salary,
-                            hra: record.hra
-                        }))
-                    };
-
-                    const res = await fetch(`${API_BASE_URL}/workers/bulk`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!res.ok) {
-                        const error = await res.json();
-                        throw new Error(error.error || 'Bulk upload failed');
-                    }
-
-                    const results = await res.json();
-
-                    // Close modal
-                    closeBulkPreviewModal();
-
-                    // Show results
-                    let message = `Bulk upload completed: ${results.success} succeeded`;
-                    if (results.failed > 0) {
-                        message += `, ${results.failed} failed`;
-                        console.error("Upload errors:", results.errors);
-                    }
-
-                    showAlert(message, results.failed > 0 ? (results.success > 0 ? "info" : "error") : "success");
-
-                    // Reload data
-                    await fetchData();
-
-                } catch (error) {
-                    console.error("Bulk upload error:", error);
-                    showAlert(`Bulk upload failed: ${error.message}`, "error");
-                    closeBulkPreviewModal();
-                } finally {
-                    confirmBtn.disabled = false;
-                    btnText.textContent = 'Upload Valid Records';
-                }
-            }
-
-            // ==================== EDIT WORKER ====================
-            window.editWorker = async function (employeeCode) {
-                try {
-                    const res = await fetch(`${API_BASE_URL}/workers/${employeeCode}`);
-                    if (!res.ok) {
-                        showAlert("Failed to load worker", "error");
-                        return;
-                    }
-
-                    const worker = await res.json();
-                    currentEditingCode = employeeCode;
-
-                    // Populate form
-                    document.getElementById("operatorNameEdit").value = worker.operator_name;
-                    document.getElementById("employeeCodeEdit").value = worker.employee_code;
-                    document.getElementById("designationEdit").value = worker.designation;
-                    document.getElementById("departmentEdit").value = worker.department;
-                    document.getElementById("mobileNumberEdit").value = worker.mobile_number || '';
-                    document.getElementById("esiNumberEdit").value = worker.esi_number;
-                    document.getElementById("dateOfJoiningEdit").value = worker.date_of_joining;
-                    document.getElementById("coverageEdit").value = worker.coverage;
-
-                    // Clear salary fields
-                    document.getElementById("basicSalaryEdit").value = "";
-                    document.getElementById("hraEdit").value = "";
-                    document.getElementById("bonusEdit").value = "";
-                    document.getElementById("effectiveDate").value = new Date().toISOString().split('T')[0];
-                    document.getElementById("changeReason").value = "";
-                    document.getElementById("remarks").value = "";
-
-                    // Update UI
-                    document.getElementById("formTitle").textContent = `Edit Worker`;
-                    document.getElementById("submitBtn").textContent = "Update Worker";
-
-                    // CRITICAL: Remove required from Add form fields BEFORE hiding them
-                    document.getElementById("operatorName").required = false;
-                    document.getElementById("employeeCode").required = false;
-                    document.getElementById("designation").required = false;
-                    document.getElementById("department").required = false;
-                    document.getElementById("esiNumber").required = false;
-                    document.getElementById("dateOfJoining").required = false;
-                    document.getElementById("coverage").required = false;
-                    document.getElementById("basicSalary").required = false;
-                    document.getElementById("hra").required = false;
-
-                    document.getElementById("addFormFields").style.display = "none";
-                    document.getElementById("editFormFields").style.display = "block";
-                    document.getElementById("editModeBanner").style.display = "block";
-                    document.getElementById("editingWorkerName").textContent = `${worker.operator_name} (${worker.employee_code})`;
-
-                    // Add required attributes to edit form fields
-                    document.getElementById("operatorNameEdit").required = true;
-                    document.getElementById("designationEdit").required = true;
-                    document.getElementById("departmentEdit").required = true;
-                    document.getElementById("esiNumberEdit").required = true;
-                    document.getElementById("dateOfJoiningEdit").required = true;
-                    document.getElementById("coverageEdit").required = true;
-
-                    // Scroll to form
-                    document.querySelector(".card").scrollIntoView({ behavior: "smooth" });
-                } catch (error) {
-                    showAlert("Error loading worker", "error");
-                }
-            };
-
-            // Cancel edit
-            function cancelEdit() {
-                currentEditingCode = null;
-                document.getElementById("workerForm").reset();
-                document.getElementById("formTitle").textContent = "Add Worker";
-                document.getElementById("submitBtn").textContent = "Add Worker";
-
-                // Remove required attributes from edit form fields BEFORE hiding them
-                document.getElementById("operatorNameEdit").required = false;
-                document.getElementById("designationEdit").required = false;
-                document.getElementById("departmentEdit").required = false;
-                document.getElementById("mobileNumberEdit").required = false;
-                document.getElementById("esiNumberEdit").required = false;
-                document.getElementById("dateOfJoiningEdit").required = false;
-                document.getElementById("coverageEdit").required = false;
-
-                document.getElementById("addFormFields").style.display = "block";
-                document.getElementById("editFormFields").style.display = "none";
-                document.getElementById("editModeBanner").style.display = "none";
-                document.getElementById("alertContainer").innerHTML = "";
-
-                // Restore required attributes to Add form fields
-                document.getElementById("operatorName").required = true;
-                document.getElementById("employeeCode").required = true;
-                document.getElementById("designation").required = true;
-                document.getElementById("department").required = true;
-                document.getElementById("esiNumber").required = true;
-                document.getElementById("dateOfJoining").required = true;
-                document.getElementById("coverage").required = true;
-                document.getElementById("basicSalary").required = true;
-                document.getElementById("hra").required = true;
-            }
-            // ==================== SALARY HISTORY ====================
-            window.showSalaryHistory = async function (employeeCode, workerName) {
-                const modal = document.getElementById("historyModal");
-                const historyContent = document.getElementById("historyContent");
-                const historyWorkerInfo = document.getElementById("historyWorkerInfo");
-
-                historyWorkerInfo.textContent = `${workerName} (${employeeCode})`;
-                historyContent.innerHTML = '<div style="text-align: center; padding: 20px;"><span class="spinner"></span> Loading history...</div>';
-
-                modal.classList.add("show");
-
-                try {
-                    const res = await fetch(`${API_BASE_URL}/workers/${employeeCode}/remuneration/history`);
-                    if (!res.ok) {
-                        historyContent.innerHTML = '<div class="empty-state">No history found</div>';
-                        return;
-                    }
-
-                    const data = await res.json();
-                    const history = data.history || [];
-
-                    if (history.length === 0) {
-                        historyContent.innerHTML = '<div class="empty-state">No salary history available</div>';
-                        return;
-                    }
-
-                    historyContent.innerHTML = history.map(record => {
-                        const basicSalary = parseFloat(record.basic_salary || 0);
-                        const hra = parseFloat(record.hra || 0);
-                        const bonus = parseFloat(record.bonus || 0);
-                        const total = basicSalary + hra + bonus;
-
-                        return `
-<div class="history-item">
-<div class="history-header">
-<div>
-<span class="history-version">Version ${record.version}</span>
-<span class="history-date">${record.effective_date}</span>
-</div>
-<span style="font-size: 12px; color: #475569;">Created: ${new Date(record.created_at).toLocaleDateString()}</span>
-</div>
-<div class="history-details">
-<div class="history-detail-item">
-<span class="history-detail-label">Basic Salary:</span>
-<span class="history-detail-value">₹${basicSalary.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-</div>
-<div class="history-detail-item">
-<span class="history-detail-label">HRA:</span>
-<span class="history-detail-value">₹${hra.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-</div>
-${bonus > 0 ? `
-<div class="history-detail-item">
-<span class="history-detail-label">Bonus:</span>
-<span class="history-detail-value">₹${bonus.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-</div>
-` : ''}
-<div class="history-detail-item">
-<span class="history-detail-label">Total:</span>
-<span class="history-detail-value" style="font-weight: 600;">₹${total.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-</div>
-<div class="history-detail-item">
-<span class="history-detail-label">Change:</span>
-<span class="history-detail-value">${record.change_reason}</span>
-</div>
-</div>
-<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #cbd5e1; font-size: 13px; color: #475569;">
-<div><strong>Remarks:</strong> ${record.remarks || 'N/A'}</div>
-<div><strong>Updated By:</strong> ${record.created_by}</div>
-</div>
-</div>
-`;
+        }
+
+        // ==================== SALARY HISTORY ====================
+        window.showSalaryHistory = async function(employeeCode, workerName) {
+            const modal = document.getElementById("historyModal");
+            const content = document.getElementById("historyContent");
+            document.getElementById("historyWorkerInfo").textContent = `${workerName} (${employeeCode})`;
+            content.innerHTML = '<div style="text-align:center;padding:20px;"><span class="spinner"></span> Loading...</div>';
+            modal.classList.add("show");
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/workers/${employeeCode}/remuneration/history`);
+                if (!res.ok) { content.innerHTML = '<div class="empty-state">No history found</div>'; return; }
+                const data = await res.json();
+                const history = data.history || [];
+                if (!history.length) { content.innerHTML = '<div class="empty-state">No salary history</div>'; return; }
+
+                content.innerHTML = history.map(record => {
+                    const components = record.components || {};
+                    let total = 0;
+                    const parts = salaryComponents.map(comp => {
+                        const val = parseFloat(components[comp.key] || 0);
+                        total += val;
+                        return `<div style="display:flex;justify-content:space-between;"><span style="color:#475569;">${comp.label}:</span><span style="font-weight:500;">₹${val.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span></div>`;
                     }).join('');
 
-                } catch (error) {
-                    console.error("Error:", error);
-                    historyContent.innerHTML = '<div class="empty-state">Failed to load history</div>';
-                }
-            };
+                    return `<div class="history-item">
+<div class="history-header">
+<span class="history-version">Version ${record.version}</span>
+<span style="font-size:12px;color:#475569;">${record.effective_date}</span>
+</div>
+${parts}
+<div style="display:flex;justify-content:space-between;margin-top:4px;border-top:1px solid #e2e8f0;padding-top:4px;"><span style="font-weight:600;">Total:</span><span style="font-weight:600;">₹${total.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span></div>
+<div style="margin-top:8px;font-size:12px;color:#475569;">Reason: ${record.change_reason || 'N/A'} | By: ${record.created_by || 'N/A'}</div>
+</div>`;
+                }).join('');
+            } catch (error) { content.innerHTML = '<div class="empty-state">Failed to load history</div>'; }
+        };
 
-            function closeHistoryModal() {
-                document.getElementById("historyModal").classList.remove("show");
-            }
+        function closeHistoryModal() { document.getElementById("historyModal").classList.remove("show"); }
 
-            // Close modal on outside click
-            window.onclick = function (event) {
-                const historyModal = document.getElementById("historyModal");
-                const csvModal = document.getElementById("csvPreviewModal");
-                if (event.target === historyModal) {
-                    historyModal.classList.remove("show");
-                }
-                if (event.target === csvModal) {
-                    csvModal.classList.remove("show");
-                }
-            };
+        window.onclick = function(event) {
+            const m = document.getElementById("historyModal");
+            if (event.target === m) m.classList.remove("show");
+        };
 
-            // ==================== DELETE WORKER ====================
-            window.deleteWorker = async function (employeeCode, name) {
-                if (!confirm(`Delete ${name}? This action cannot be undone.`)) return;
+        // ==================== DELETE WORKER ====================
+        window.deleteWorker = async function(employeeCode, name) {
+            if (!confirm(`Delete ${name}? This action cannot be undone.`)) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/workers/${employeeCode}`, { method: "DELETE" });
+                if (res.ok) { showAlert("Worker deleted", "success"); await fetchData(); }
+                else { const e = await res.json(); showAlert(e.error || "Failed", "error"); }
+            } catch (error) { showAlert("Network error", "error"); }
+        };
 
-                try {
-                    const res = await fetch(`${API_BASE_URL}/workers/${employeeCode}`, { method: "DELETE" });
-                    if (res.ok) {
-                        showAlert("Worker deleted", "success");
-                        await fetchData();
-                    } else {
-                        const error = await res.json();
-                        showAlert(error.error || "Failed to delete worker", "error");
-                    }
-                } catch (error) {
-                    showAlert("Network error", "error");
-                }
-            };
+        // ==================== CSV TEMPLATE ====================
+        function downloadCSVTemplate() {
+            const hierHeaders = hierarchyFields.map(f => f.label).join(',');
+            const salaryHeaders = salaryComponents.map(c => c.label).join(',');
+            const csv = `EMP_CODE,EMP_NAME,DOJ,Coverage,${hierHeaders},${salaryHeaders}\n001,John Doe,2024-01-15,Full-time,${'Sample,'.repeat(hierarchyFields.length).slice(0,-1)},${'10000,'.repeat(salaryComponents.length).slice(0,-1)}`;
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'worker_upload_template.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
 
-            // ==================== FORM SUBMISSION ====================
-            document.getElementById("workerForm").addEventListener("submit", async (e) => {
-                e.preventDefault();
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const lines = e.target.result.split('\n').filter(l => l.trim());
+                if (lines.length < 2) { showAlert("CSV is empty", "error"); return; }
+                const headers = lines[0].split(',').map(h => h.trim());
+                const workersData = [];
 
-                const btn = document.getElementById("submitBtn");
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner"></span>' + (currentEditingCode ? 'Updating...' : 'Adding...');
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = lines[i].split(',').map(v => v.trim());
+                    const row = {};
+                    headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
 
-                const payload = {
-                    operator_name: currentEditingCode ?
-                        document.getElementById("operatorNameEdit").value.trim() :
-                        document.getElementById("operatorName").value.trim(),
-                    designation: currentEditingCode ?
-                        document.getElementById("designationEdit").value :
-                        document.getElementById("designation").value,
-                    department: currentEditingCode ?
-                        document.getElementById("departmentEdit").value :
-                        document.getElementById("department").value,
-                };
+                    const hierVals = {};
+                    hierarchyFields.forEach(f => { hierVals[f.key] = row[f.label] || ''; });
+                    const salaryVals = {};
+                    salaryComponents.forEach(c => { salaryVals[c.key] = parseFloat(row[c.label]) || 0; });
 
-                // For Add Worker form
-                if (!currentEditingCode) {
-                    payload.employee_code = document.getElementById("employeeCode").value.trim().toUpperCase();
-                    payload.mobile_number = document.getElementById("mobileNumber").value.trim();
-                    payload.esi_number = document.getElementById("esiNumber").value.trim();
-                    payload.date_of_joining = document.getElementById("dateOfJoining").value;
-                    payload.coverage = document.getElementById("coverage").value.trim();
-                    payload.basic_salary = parseFloat(document.getElementById("basicSalary").value);
-                    payload.hra = parseFloat(document.getElementById("hra").value);
-                }
-                // For Edit Worker form
-                else {
-                    payload.mobile_number = document.getElementById("mobileNumberEdit").value.trim();
-                    payload.esi_number = document.getElementById("esiNumberEdit").value.trim();
-                    payload.date_of_joining = document.getElementById("dateOfJoiningEdit").value;
-                    payload.coverage = document.getElementById("coverageEdit").value.trim();
-
-                    const basicSalary = document.getElementById("basicSalaryEdit").value;
-                    const hra = document.getElementById("hraEdit").value;
-                    const bonus = document.getElementById("bonusEdit").value;
-
-                    if (basicSalary) payload.basic_salary = parseFloat(basicSalary);
-                    if (hra) payload.hra = parseFloat(hra);
-                    if (bonus) payload.bonus = parseFloat(bonus);
-
-                    if (basicSalary || hra || bonus) {
-                        payload.effective_date = document.getElementById("effectiveDate").value || new Date().toISOString().split('T')[0];
-                        payload.change_reason = document.getElementById("changeReason").value.trim();
-                        payload.remarks = document.getElementById("remarks").value.trim();
-                    }
-                }
-
-                try {
-                    const endpoint = currentEditingCode ? `${API_BASE_URL}/workers/${currentEditingCode}` : `${API_BASE_URL}/workers`;
-                    const method = currentEditingCode ? "PUT" : "POST";
-
-                    const res = await fetch(endpoint, {
-                        method: method,
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload)
+                    workersData.push({
+                        employee_code: row['EMP_CODE'] || '',
+                        operator_name: row['EMP_NAME'] || '',
+                        date_of_joining: row['DOJ'] || '',
+                        coverage: row['Coverage'] || '',
+                        hierarchy_values: hierVals,
+                        salary_components: salaryVals,
+                        contact_info: [],
                     });
+                }
 
-                    if (res.ok) {
-                        showAlert(currentEditingCode ? "Worker updated successfully" : "Worker added successfully", "success");
-                        if (currentEditingCode) {
-                            cancelEdit();
-                        } else {
-                            document.getElementById("workerForm").reset();
-                        }
-                        await fetchData();
-                    } else {
-                        const error = await res.json();
-                        showAlert(error.error || "Failed to save worker", "error");
-                    }
-                } catch (error) {
-                    console.error("Error:", error);
-                    showAlert("Network error", "error");
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = currentEditingCode ? "Update Worker" : "Add Worker";
+                try {
+                    const res = await fetch(`${API_BASE_URL}/workers/bulk`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ workers: workersData })
+                    });
+                    const result = await res.json();
+                    showAlert(`Bulk upload: ${result.success} succeeded, ${result.failed} failed`, result.failed > 0 ? 'error' : 'success');
+                    await fetchData();
+                } catch (err) { showAlert('Bulk upload failed: ' + err.message, 'error'); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ==================== FORM SUBMISSION ====================
+        document.getElementById("workerForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("submitBtn");
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>' + (currentEditingCode ? 'Updating...' : 'Adding...');
+
+            const hierVals = {};
+            hierarchyFields.forEach(f => {
+                hierVals[f.key] = document.getElementById(`hierarchy_${f.key}`)?.value || '';
+            });
+
+            const salaryVals = {};
+            let hasSalaryInput = false;
+            salaryComponents.forEach(c => {
+                const val = document.getElementById(`salary_${c.key}`)?.value;
+                if (val !== '' && val !== undefined) {
+                    salaryVals[c.key] = parseFloat(val);
+                    hasSalaryInput = true;
                 }
             });
-            // Initialize on page load
-            fetchData();
-        </script>
-</body>
 
+            const payload = {
+                operator_name: document.getElementById("operatorName").value.trim(),
+                date_of_joining: document.getElementById("dateOfJoining").value,
+                coverage: document.getElementById("coverage").value.trim(),
+                hierarchy_values: hierVals,
+                contact_info: getContactInfo(),
+            };
+
+            if (!currentEditingCode) {
+                const empCode = document.getElementById("employeeCode").value.trim().toUpperCase();
+                if (empCode) payload.employee_code = empCode;
+                payload.salary_components = salaryVals;
+            } else {
+                if (hasSalaryInput) payload.salary_components = salaryVals;
+            }
+
+            try {
+                const endpoint = currentEditingCode ? `${API_BASE_URL}/workers/${currentEditingCode}` : `${API_BASE_URL}/workers`;
+                const method = currentEditingCode ? "PUT" : "POST";
+                const res = await fetch(endpoint, { method, headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) });
+                if (res.ok) {
+                    showAlert(currentEditingCode ? "Worker updated" : "Worker added", "success");
+                    if (currentEditingCode) cancelEdit();
+                    else { document.getElementById("workerForm").reset(); document.getElementById("contactFieldsContainer").innerHTML = ''; }
+                    await fetchData();
+                } else {
+                    const err = await res.json();
+                    showAlert(err.error || "Failed", "error");
+                }
+            } catch (error) { showAlert("Network error", "error"); }
+            finally { btn.disabled = false; btn.innerHTML = currentEditingCode ? "Update Worker" : "Add Worker"; }
+        });
+
+        // ==================== INIT ====================
+        buildHierarchyDropdowns();
+        buildSalaryInputs();
+        addContactField('Mobile', '');
+        fetchData();
+    </script>
+</body>
 </html>

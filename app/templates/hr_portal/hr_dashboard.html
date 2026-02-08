@@ -27,7 +27,7 @@ block head_extra %}
       <div>
         <h1 class="text-4xl font-extrabold text-gray-800">HR Portal</h1>
         <p class="text-lg text-gray-600 mt-2">
-          Workforce Allocation & Department Management
+          Workforce Management & Configuration
         </p>
       </div>
       <a href="{{ url_for('dashboard.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
@@ -41,44 +41,33 @@ block head_extra %}
     <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-blue-100 text-sm font-medium">Total Departments</p>
-          <p class="text-3xl font-bold mt-2">{{ stats.total_departments }}</p>
+          <p class="text-blue-100 text-sm font-medium">Total Workers</p>
+          <p class="text-3xl font-bold mt-2">{{ stats.total_workers }}</p>
+          <p class="text-blue-200 text-xs mt-1">Limit: {{ stats.employee_limit }}</p>
         </div>
         <svg class="h-12 w-12 text-blue-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-      </div>
-    </div>
-
-    <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-green-100 text-sm font-medium">Active Departments</p>
-          <p class="text-3xl font-bold mt-2">{{ stats.active_departments }}</p>
-        </div>
-        <svg class="h-12 w-12 text-green-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
-    </div>
-
-    <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-purple-100 text-sm font-medium">Manpower Types</p>
-          <p class="text-3xl font-bold mt-2">{{ stats.manpower_types }}</p>
-        </div>
-        <svg class="h-12 w-12 text-purple-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
           stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       </div>
     </div>
+
+    {% for field_key, field_data in stats.hierarchy_counts.items() %}
+    <div class="stat-card bg-gradient-to-br {% if loop.index0 == 0 %}from-green-500 to-green-600{% elif loop.index0 == 1 %}from-purple-500 to-purple-600{% else %}from-teal-500 to-teal-600{% endif %} text-white p-6 rounded-xl shadow-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-white text-sm font-medium" style="opacity:0.8">{{ field_data.label }}</p>
+          <p class="text-3xl font-bold mt-2">{{ field_data.count }}</p>
+        </div>
+        <svg class="h-12 w-12" style="opacity:0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      </div>
+    </div>
+    {% endfor %}
 
     <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl shadow-lg">
       <div class="flex items-center justify-between">
@@ -97,38 +86,6 @@ block head_extra %}
 
   <!-- Navigation Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <a href="{{ url_for('hr_portal.daily_attendance', workspace_id=workspace_id) }}"
-      class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
-      <div class="bg-blue-100 p-4 rounded-full mb-4">
-        <svg class="h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-      </div>
-      <h2 class="text-xl font-bold text-gray-800 mb-2">Daily Attendance</h2>
-      <p class="text-gray-600 text-center text-sm">
-        Allocate workforce to departments
-      </p>
-    </a>
-
-
-
-
-    <a href="{{ url_for('hr_portal.hr_reports', workspace_id=workspace_id) }}"
-      class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
-      <div class="bg-indigo-100 p-4 rounded-full mb-4">
-        <svg class="h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      </div>
-      <h2 class="text-xl font-bold text-gray-800 mb-2">Reports</h2>
-      <p class="text-gray-600 text-center text-sm">
-        View manhours and allocation reports
-      </p>
-    </a>
 
     <a href="{{ url_for('hr_portal.hr_settings', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
@@ -142,54 +99,42 @@ block head_extra %}
       </div>
       <h2 class="text-xl font-bold text-gray-800 mb-2">Settings</h2>
       <p class="text-gray-600 text-center text-sm">
-        Configure departments, manpower & shifts
+        Configure hierarchy, salary components & shifts
       </p>
     </a>
 
-    <!-- CORRECTED: Changed url_for('hr_portal.add_worker') to url_for('hr_portal.manage_workers') -->
     <a href="{{ url_for('hr_portal.manage_workers', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
       <div class="bg-gray-100 p-4 rounded-full mb-4">
-        <!-- Users / Personnel SVG -->
         <svg class="h-10 w-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
           stroke="currentColor">
-          <!-- Head 1 -->
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M17 20v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a4 4 0 100-8 4 4 0 000 8z" />
-          <!-- Head 2 -->
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M23 20v-2a4 4 0 00-3-3.87" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3.13a4 4 0 010 7.75" />
         </svg>
       </div>
-
       <h2 class="text-xl font-bold text-gray-800 mb-2">Personnel Management</h2>
-      <p class="text-gray-600 text-center text-sm">Add Worker / Operator</p>
+      <p class="text-gray-600 text-center text-sm">Add, edit, and manage workers</p>
     </a>
+
     <a href="{{ url_for('hr_portal.daily_attendance', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">
       <div class="bg-gray-100 p-4 rounded-full mb-4">
-        <!-- Attendance / Calendar SVG -->
         <svg class="h-10 w-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
           stroke="currentColor">
-          <!-- Calendar -->
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2" />
           <line x1="16" y1="2" x2="16" y2="6" stroke-width="2" />
           <line x1="8" y1="2" x2="8" y2="6" stroke-width="2" />
-          <!-- Check -->
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l2 2 4-4" />
         </svg>
       </div>
-
-      <h2 class="text-xl font-bold text-gray-800 mb-2">
-        Attendance Management
-      </h2>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">Attendance Management</h2>
       <p class="text-gray-600 text-center text-sm">
-        Mark • View • Update Attendance
+        Mark, view & update attendance
       </p>
     </a>
-    <!-- Add this card to your hr_dashboard.html navigation cards grid -->
-    <!-- Place it anywhere in the grid, for example after the Reports card -->
 
     <a href="{{ url_for('hr_portal.cost_analytics', workspace_id=workspace_id) }}"
       class="nav-card bg-white p-8 rounded-xl shadow-lg flex flex-col items-center hover:shadow-xl">

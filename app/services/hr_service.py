@@ -1,16 +1,20 @@
 """
 HR Service - Business logic for the HR Portal
 All operations are workspace-scoped.
+Supports dynamic hierarchy fields, configurable salary components,
+auto-generated employee codes, and dynamic contact info.
 """
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from flask import current_app
 
-from app.models.hr_department import HRDepartment
-from app.models.hr_manpower_type import HRManpowerType
+from app.models.hr_hierarchy_value import HRHierarchyValue
 from app.models.hr_worker import HRWorker
 from app.models.hr_attendance import HRAttendance
-from app.models.hr_settings import HRSettings, DEFAULT_SHIFT_HOURS
+from app.models.hr_settings import (
+    HRSettings, DEFAULT_SHIFT_HOURS,
+    MAX_HIERARCHY_FIELDS, MAX_SALARY_COMPONENTS,
+)
 from app.models.hr_cost import HRCost
 from app.models.workspace_membership import WorkspaceMembership
 from app.models.user import User
@@ -19,85 +23,76 @@ from app.models.user import User
 class HRService:
     """Handles all HR portal business logic, workspace-scoped"""
 
-    # ==================== DEPARTMENT ====================
+    # ==================== HIERARCHY VALUES ====================
 
     @staticmethod
-    def get_departments(workspace_id: str) -> List[Dict[str, Any]]:
-        depts = HRDepartment.get_by_workspace(workspace_id)
-        return [d.to_dict() for d in depts]
+    def get_hierarchy_values(workspace_id: str, field_key: str) -> List[Dict[str, Any]]:
+        """Get all active values for a hierarchy field"""
+        values = HRHierarchyValue.get_by_workspace_and_field(workspace_id, field_key)
+        return [v.to_dict() for v in values]
 
     @staticmethod
-    def create_department(workspace_id: str, name: str, created_by: str,
-                          head: str = '', description: str = '') -> Tuple[Optional[Dict], Optional[str]]:
+    def get_all_hierarchy_values(workspace_id: str) -> Dict[str, List[Dict[str, Any]]]:
+        """Get all hierarchy values grouped by field_key"""
+        all_values = HRHierarchyValue.get_by_workspace(workspace_id)
+        grouped = {}
+        for v in all_values:
+            key = v.field_key
+            if key not in grouped:
+                grouped[key] = []
+            grouped[key].append(v.to_dict())
+        return grouped
+
+    @staticmethod
+    def create_hierarchy_value(workspace_id: str, field_key: str, name: str,
+                               created_by: str, description: str = '') -> Tuple[Optional[Dict], Optional[str]]:
         if not name.strip():
-            return None, "Department name is required"
+            return None, "Name is required"
 
-        existing = HRDepartment.find_by_name(workspace_id, name.strip())
+        # Validate field_key is active in settings
+        settings = HRSettings.get_or_create(workspace_id)
+        active_keys = [f['key'] for f in settings.get_active_hierarchy_fields()]
+        if field_key not in active_keys:
+            return None, f"Hierarchy field '{field_key}' is not active"
+
+        existing = HRHierarchyValue.find_by_name(workspace_id, field_key, name.strip())
         if existing:
-            return None, "Department with this name already exists"
+            return None, "A value with this name already exists"
 
-        dept = HRDepartment.create(
+        value = HRHierarchyValue.create(
             workspace_id=workspace_id,
+            field_key=field_key,
             name=name.strip(),
             created_by=created_by,
-            head=head.strip(),
             description=description.strip(),
         )
-        return dept.to_dict(), None
+        return value.to_dict(), None
 
     @staticmethod
-    def update_department(dept_id: str, workspace_id: str, name: str,
-                          updated_by: str, head: str = '', description: str = '') -> Tuple[bool, Optional[str]]:
-        dept = HRDepartment.get_by_id(dept_id)
-        if not dept or dept.workspace_id != workspace_id:
-            return False, "Department not found"
+    def update_hierarchy_value(value_id: str, workspace_id: str, name: str,
+                               updated_by: str, description: str = '') -> Tuple[bool, Optional[str]]:
+        value = HRHierarchyValue.get_by_id(value_id)
+        if not value or value.workspace_id != workspace_id:
+            return False, "Value not found"
         if not name.strip():
-            return False, "Department name is required"
+            return False, "Name is required"
 
-        # Check duplicate (skip self)
-        existing = HRDepartment.find_by_name(workspace_id, name.strip())
-        if existing and existing.id != dept_id:
-            return False, "Department with this name already exists"
+        existing = HRHierarchyValue.find_by_name(workspace_id, value.field_key, name.strip())
+        if existing and existing.id != value_id:
+            return False, "A value with this name already exists"
 
-        dept.name = name.strip()
-        dept.head = head.strip()
-        dept.description = description.strip()
-        dept.save()
+        value.name = name.strip()
+        value.description = description.strip()
+        value.save()
         return True, None
 
     @staticmethod
-    def archive_department(dept_id: str, workspace_id: str, archived_by: str) -> Tuple[bool, Optional[str]]:
-        dept = HRDepartment.get_by_id(dept_id)
-        if not dept or dept.workspace_id != workspace_id:
-            return False, "Department not found"
-        dept.archive(archived_by)
-        return True, None
-
-    # ==================== MANPOWER TYPES ====================
-
-    @staticmethod
-    def get_manpower_types(workspace_id: str) -> List[Dict[str, Any]]:
-        types = HRManpowerType.get_by_workspace(workspace_id)
-        return [t.to_dict() for t in types]
-
-    @staticmethod
-    def create_manpower_type(workspace_id: str, name: str, created_by: str) -> Tuple[Optional[Dict], Optional[str]]:
-        if not name.strip():
-            return None, "Manpower type name is required"
-
-        existing = HRManpowerType.find_by_name(workspace_id, name.strip())
-        if existing:
-            return None, "Manpower type with this name already exists"
-
-        mt = HRManpowerType.create(workspace_id, name.strip(), created_by)
-        return mt.to_dict(), None
-
-    @staticmethod
-    def archive_manpower_type(type_id: str, workspace_id: str, archived_by: str) -> Tuple[bool, Optional[str]]:
-        mt = HRManpowerType.get_by_id(type_id)
-        if not mt or mt.workspace_id != workspace_id:
-            return False, "Manpower type not found"
-        mt.archive(archived_by)
+    def archive_hierarchy_value(value_id: str, workspace_id: str,
+                                archived_by: str) -> Tuple[bool, Optional[str]]:
+        value = HRHierarchyValue.get_by_id(value_id)
+        if not value or value.workspace_id != workspace_id:
+            return False, "Value not found"
+        value.archive(archived_by)
         return True, None
 
     # ==================== WORKERS ====================
@@ -113,200 +108,188 @@ class HRService:
     def get_worker(workspace_id: str, worker_id: str) -> Optional[Dict[str, Any]]:
         worker = HRWorker.get_by_id(worker_id)
         if not worker or worker.workspace_id != workspace_id:
-            # Try by employee code
             worker = HRWorker.find_by_employee_code(workspace_id, worker_id)
         if not worker:
             return None
         return worker.to_dict()
 
     @staticmethod
-    def create_worker(workspace_id: str, data: Dict[str, Any], created_by: str) -> Tuple[Optional[Dict], Optional[str]]:
-        """Create a new worker with validation"""
+    def create_worker(workspace_id: str, data: Dict[str, Any],
+                      created_by: str) -> Tuple[Optional[Dict], Optional[str]]:
+        """Create a new worker with dynamic fields and auto emp code"""
+        settings = HRSettings.get_or_create(workspace_id)
+
+        # Check employee limit
+        current_workers = HRWorker.get_by_workspace(workspace_id)
+        if len(current_workers) >= settings.employee_limit:
+            return None, f"Employee limit reached ({settings.employee_limit}). Upgrade to add more."
+
         # Required fields
         operator_name = data.get('operator_name', '').strip()
-        designation = data.get('designation', '').strip()
-        department = data.get('department', '').strip()
-        employee_code = data.get('employee_code', '').strip().upper()
-        esi_number = data.get('esi_number', '').strip()
+        if not operator_name:
+            return None, "Worker name is required"
+
         date_of_joining = data.get('date_of_joining', '').strip()
-        coverage = data.get('coverage', '').strip()
-        mobile_number = data.get('mobile_number', '').strip()
-        basic_salary = data.get('basic_salary', 0)
-        hra = data.get('hra', 0)
-
-        # Validate required
-        for field_name, value in [('Operator name', operator_name), ('Designation', designation),
-                                  ('Department', department), ('Employee code', employee_code),
-                                  ('ESI number', esi_number), ('Date of joining', date_of_joining),
-                                  ('Coverage', coverage)]:
-            if not value:
-                return None, f"{field_name} is required"
-
-        # Validate mobile
-        if mobile_number and (not mobile_number.isdigit() or len(mobile_number) != 10):
-            return None, "Mobile number must be exactly 10 digits"
-
-        # Validate ESI
-        if not esi_number.isdigit():
-            return None, "ESI number must be numeric"
-
-        # Validate date
+        if not date_of_joining:
+            return None, "Date of joining is required"
         try:
             datetime.strptime(date_of_joining, '%Y-%m-%d')
         except ValueError:
             return None, "Date of joining must be in YYYY-MM-DD format"
 
-        # Validate salary
-        try:
-            basic_salary = float(basic_salary)
-            hra = float(hra)
-            if basic_salary < 0 or hra < 0:
-                return None, "Salary values cannot be negative"
-        except (ValueError, TypeError):
-            return None, "Salary must be a valid number"
+        coverage = data.get('coverage', '').strip()
 
-        # Check duplicate employee code
-        existing = HRWorker.find_by_employee_code(workspace_id, employee_code)
-        if existing:
-            return None, f"Employee code '{employee_code}' already exists"
+        # Employee code: use provided or auto-generate
+        employee_code = data.get('employee_code', '').strip().upper()
+        if employee_code:
+            existing = HRWorker.find_by_employee_code(workspace_id, employee_code)
+            if existing:
+                return None, f"Employee code '{employee_code}' already exists"
+        # Auto-generate if not provided (will happen in HRWorker.create)
+
+        # Hierarchy values (dynamic)
+        hierarchy_values = data.get('hierarchy_values', {})
+        active_fields = settings.get_active_hierarchy_fields()
+        for field in active_fields:
+            field_key = field['key']
+            val = hierarchy_values.get(field_key, '').strip()
+            if not val:
+                return None, f"{field['label']} is required"
+            # Validate value exists in hierarchy
+            existing_val = HRHierarchyValue.find_by_name(workspace_id, field_key, val)
+            if not existing_val:
+                return None, f"Invalid {field['label']}: '{val}'"
+            # Use the canonical name
+            hierarchy_values[field_key] = existing_val.name
+
+        # Contact info (dynamic, optional)
+        contact_info = data.get('contact_info', [])
+
+        # Salary components (dynamic)
+        salary_components = data.get('salary_components', {})
+        active_components = settings.get_active_salary_components()
+        for comp in active_components:
+            comp_key = comp['key']
+            val = salary_components.get(comp_key, 0)
+            try:
+                val = float(val)
+                if val < 0:
+                    return None, f"{comp['label']} cannot be negative"
+                salary_components[comp_key] = val
+            except (ValueError, TypeError):
+                return None, f"{comp['label']} must be a valid number"
 
         worker = HRWorker.create(
             workspace_id=workspace_id,
-            employee_code=employee_code,
             operator_name=operator_name,
-            designation=designation,
-            department=department,
             created_by=created_by,
-            mobile_number=mobile_number,
-            esi_number=esi_number,
+            employee_code=employee_code or None,
+            hierarchy_values=hierarchy_values,
+            contact_info=contact_info,
+            salary_components=salary_components,
             date_of_joining=date_of_joining,
             coverage=coverage,
-            basic_salary=basic_salary,
-            hra=hra,
         )
         return worker.to_dict(), None
 
     @staticmethod
     def update_worker(workspace_id: str, employee_code: str, data: Dict[str, Any],
                       updated_by: str) -> Tuple[Optional[Dict], Optional[str]]:
-        """Update worker basic info and optionally salary"""
+        """Update worker info and optionally salary"""
         worker = HRWorker.find_by_employee_code(workspace_id, employee_code.upper())
         if not worker:
             return None, "Worker not found"
 
-        # Validate required basic fields
+        settings = HRSettings.get_or_create(workspace_id)
+
+        # Basic info
         operator_name = data.get('operator_name', '').strip()
-        designation = data.get('designation', '').strip()
-        department = data.get('department', '').strip()
-        mobile_number = data.get('mobile_number', '').strip()
-        esi_number = data.get('esi_number', '').strip()
+        if not operator_name:
+            return None, "Worker name is required"
+
         date_of_joining = data.get('date_of_joining', '').strip()
+        if date_of_joining:
+            try:
+                datetime.strptime(date_of_joining, '%Y-%m-%d')
+            except ValueError:
+                return None, "Date of joining must be in YYYY-MM-DD format"
+
         coverage = data.get('coverage', '').strip()
 
-        for field_name, value in [('Operator name', operator_name), ('Designation', designation),
-                                  ('Department', department), ('ESI number', esi_number),
-                                  ('Date of joining', date_of_joining), ('Coverage', coverage)]:
-            if not value:
-                return None, f"{field_name} is required"
+        # Hierarchy values
+        hierarchy_values = data.get('hierarchy_values')
+        if hierarchy_values is not None:
+            active_fields = settings.get_active_hierarchy_fields()
+            for field in active_fields:
+                field_key = field['key']
+                val = hierarchy_values.get(field_key, '').strip()
+                if not val:
+                    return None, f"{field['label']} is required"
+                existing_val = HRHierarchyValue.find_by_name(workspace_id, field_key, val)
+                if not existing_val:
+                    return None, f"Invalid {field['label']}: '{val}'"
+                hierarchy_values[field_key] = existing_val.name
+            worker.hierarchy_values = hierarchy_values
 
-        if mobile_number and (not mobile_number.isdigit() or len(mobile_number) != 10):
-            return None, "Mobile number must be exactly 10 digits"
-        if not esi_number.isdigit():
-            return None, "ESI number must be numeric"
-        try:
-            datetime.strptime(date_of_joining, '%Y-%m-%d')
-        except ValueError:
-            return None, "Date of joining must be in YYYY-MM-DD format"
+        # Contact info
+        contact_info = data.get('contact_info')
+        if contact_info is not None:
+            worker.contact_info = contact_info
 
-        # Update basic info
         worker.operator_name = operator_name
-        worker.designation = designation
-        worker.department = department
-        worker.mobile_number = mobile_number
-        worker.esi_number = esi_number
-        worker.date_of_joining = date_of_joining
+        if date_of_joining:
+            worker.date_of_joining = date_of_joining
         worker.coverage = coverage
         worker.updated_by = updated_by
 
-        # Handle salary/bonus updates
-        new_basic = data.get('basic_salary')
-        new_hra = data.get('hra')
-        bonus_amount = data.get('bonus')
+        # Handle salary update
+        new_components = data.get('salary_components')
         effective_date = data.get('effective_date', '').strip() or datetime.utcnow().strftime('%Y-%m-%d')
         change_reason = data.get('change_reason', '').strip()
         remarks = data.get('remarks', '').strip()
 
         salary_updated = False
 
-        if new_basic is not None or new_hra is not None or bonus_amount is not None:
-            current = worker.get_current_remuneration()
-            current_basic = current.get('basic_salary', 0)
-            current_hra = current.get('hra', 0)
-
+        if new_components is not None:
             if effective_date:
                 try:
                     datetime.strptime(effective_date, '%Y-%m-%d')
                 except ValueError:
                     return None, "effective_date must be YYYY-MM-DD"
 
-            if (new_basic is not None or new_hra is not None) and bonus_amount is not None:
-                return None, "Cannot update salary and give bonus in the same transaction"
+            current = worker.get_current_remuneration()
+            current_components = current.get('components', {})
 
-            if new_basic is not None or new_hra is not None:
-                final_basic = current_basic
-                final_hra = current_hra
-                if new_basic is not None:
+            # Validate and parse new components
+            active_comp_config = settings.get_active_salary_components()
+            final_components = {}
+            for comp in active_comp_config:
+                comp_key = comp['key']
+                val = new_components.get(comp_key)
+                if val is not None:
                     try:
-                        final_basic = float(new_basic)
-                        if final_basic < 0:
-                            return None, "Basic salary cannot be negative"
+                        val = float(val)
+                        if val < 0:
+                            return None, f"{comp['label']} cannot be negative"
+                        final_components[comp_key] = val
                     except (ValueError, TypeError):
-                        return None, "Basic salary must be a valid number"
-                if new_hra is not None:
-                    try:
-                        final_hra = float(new_hra)
-                        if final_hra < 0:
-                            return None, "HRA cannot be negative"
-                    except (ValueError, TypeError):
-                        return None, "HRA must be a valid number"
+                        return None, f"{comp['label']} must be a valid number"
+                else:
+                    final_components[comp_key] = current_components.get(comp_key, 0)
 
-                if final_basic == current_basic and final_hra == current_hra:
-                    return None, "New salary is same as current salary. No change made."
-
+            # Check if anything actually changed
+            if final_components == current_components:
+                pass  # No salary change, just save other fields
+            else:
                 record = {
-                    'basic_salary': final_basic,
-                    'hra': final_hra,
-                    'bonus': 0,
+                    'components': final_components,
                     'effective_date': effective_date,
                     'created_at': datetime.utcnow().isoformat(),
                     'created_by': updated_by,
-                    'remarks': remarks or f"Basic: {current_basic} -> {final_basic}, HRA: {current_hra} -> {final_hra}",
+                    'remarks': remarks or 'Salary update',
                     'is_active': True,
                     'change_reason': change_reason or 'Salary update',
-                    'change_type': 'salary_increase',
-                }
-                worker.add_salary_record(record)
-                salary_updated = True
-
-            elif bonus_amount is not None:
-                try:
-                    bonus_amount = float(bonus_amount)
-                    if bonus_amount <= 0:
-                        return None, "Bonus must be greater than 0"
-                except (ValueError, TypeError):
-                    return None, "Bonus must be a valid number"
-
-                record = {
-                    'basic_salary': current_basic,
-                    'hra': current_hra,
-                    'bonus': bonus_amount,
-                    'effective_date': effective_date,
-                    'created_at': datetime.utcnow().isoformat(),
-                    'created_by': updated_by,
-                    'remarks': remarks or f"Bonus of {bonus_amount}",
-                    'is_active': True,
-                    'change_reason': change_reason or 'Bonus payment',
-                    'change_type': 'bonus',
+                    'change_type': 'salary_update',
                 }
                 worker.add_salary_record(record)
                 salary_updated = True
@@ -317,7 +300,8 @@ class HRService:
         return worker.to_dict(), None
 
     @staticmethod
-    def delete_worker(workspace_id: str, worker_id: str, deleted_by: str) -> Tuple[bool, Optional[str]]:
+    def delete_worker(workspace_id: str, worker_id: str,
+                      deleted_by: str) -> Tuple[bool, Optional[str]]:
         """Soft delete a worker"""
         worker = HRWorker.get_by_id(worker_id)
         if not worker or worker.workspace_id != workspace_id:
@@ -328,7 +312,8 @@ class HRService:
         return True, None
 
     @staticmethod
-    def get_remuneration_history(workspace_id: str, employee_code: str) -> Optional[Dict[str, Any]]:
+    def get_remuneration_history(workspace_id: str,
+                                 employee_code: str) -> Optional[Dict[str, Any]]:
         worker = HRWorker.find_by_employee_code(workspace_id, employee_code.upper())
         if not worker:
             return None
@@ -341,101 +326,140 @@ class HRService:
         }
 
     @staticmethod
-    def bulk_upload_workers(workspace_id: str, workers_data: List[Dict], created_by: str) -> Dict[str, Any]:
-        """Bulk upload workers with validation against workspace departments/designations"""
+    def bulk_upload_workers(workspace_id: str, workers_data: List[Dict],
+                            created_by: str) -> Dict[str, Any]:
+        """Bulk upload workers with validation"""
         results = {'success': 0, 'failed': 0, 'errors': []}
 
-        # Load valid departments and designations
-        depts = HRDepartment.get_by_workspace(workspace_id)
-        valid_depts = {d.name.lower(): d.name for d in depts}
+        settings = HRSettings.get_or_create(workspace_id)
+        active_fields = settings.get_active_hierarchy_fields()
+        active_components = settings.get_active_salary_components()
 
-        types = HRManpowerType.get_by_workspace(workspace_id)
-        valid_desig = {t.name.lower(): t.name for t in types}
+        # Load valid hierarchy values
+        valid_values = {}
+        for field in active_fields:
+            values = HRHierarchyValue.get_by_workspace_and_field(workspace_id, field['key'])
+            valid_values[field['key']] = {v.name.lower(): v.name for v in values}
 
         # Get existing codes
         existing_workers = HRWorker.get_by_workspace(workspace_id, active_only=False)
         existing_codes = {w.employee_code for w in existing_workers}
+        current_count = len([w for w in existing_workers if w.is_active])
 
         for wd in workers_data:
             try:
+                # Check employee limit
+                if current_count + results['success'] >= settings.employee_limit:
+                    results['failed'] += 1
+                    results['errors'].append({
+                        'employee_code': wd.get('employee_code', 'UNKNOWN'),
+                        'error': f'Employee limit ({settings.employee_limit}) reached'
+                    })
+                    continue
+
                 emp_code = wd.get('employee_code', '').strip().upper()
                 operator_name = wd.get('operator_name', '').strip()
-                esi_number = wd.get('esi_number', '').strip()
                 doj = wd.get('date_of_joining', '').strip()
                 coverage = wd.get('coverage', '').strip()
-                designation_input = wd.get('designation', '').strip()
-                department_input = wd.get('department', '').strip()
-                mobile = wd.get('mobile_number', '').strip() if wd.get('mobile_number') else ''
-                basic_salary = wd.get('basic_salary', 0)
-                hra = wd.get('hra', 0)
 
-                if not all([emp_code, operator_name, esi_number, doj, coverage, designation_input, department_input]):
+                if not all([operator_name, doj]):
                     results['failed'] += 1
-                    results['errors'].append({'employee_code': emp_code or 'UNKNOWN', 'error': 'Missing required fields'})
+                    results['errors'].append({
+                        'employee_code': emp_code or 'UNKNOWN',
+                        'error': 'Missing required fields (name, date_of_joining)'
+                    })
                     continue
 
-                if emp_code in existing_codes:
+                if emp_code and emp_code in existing_codes:
                     results['failed'] += 1
-                    results['errors'].append({'employee_code': emp_code, 'error': 'Employee code already exists'})
-                    continue
-
-                if mobile and (not mobile.isdigit() or len(mobile) != 10):
-                    results['failed'] += 1
-                    results['errors'].append({'employee_code': emp_code, 'error': 'Invalid mobile number'})
-                    continue
-
-                if not esi_number.isdigit():
-                    results['failed'] += 1
-                    results['errors'].append({'employee_code': emp_code, 'error': 'Invalid ESI number'})
+                    results['errors'].append({
+                        'employee_code': emp_code,
+                        'error': 'Employee code already exists'
+                    })
                     continue
 
                 try:
                     datetime.strptime(doj, '%Y-%m-%d')
                 except ValueError:
                     results['failed'] += 1
-                    results['errors'].append({'employee_code': emp_code, 'error': 'Invalid date format'})
+                    results['errors'].append({
+                        'employee_code': emp_code or 'UNKNOWN',
+                        'error': 'Invalid date format'
+                    })
                     continue
 
-                if designation_input.lower() not in valid_desig:
-                    results['failed'] += 1
-                    results['errors'].append({'employee_code': emp_code, 'error': f"Invalid designation '{designation_input}'"})
+                # Validate hierarchy values
+                hierarchy_values = wd.get('hierarchy_values', {})
+                hierarchy_valid = True
+                for field in active_fields:
+                    fk = field['key']
+                    val = hierarchy_values.get(fk, '').strip()
+                    if not val:
+                        results['failed'] += 1
+                        results['errors'].append({
+                            'employee_code': emp_code or 'UNKNOWN',
+                            'error': f"Missing {field['label']}"
+                        })
+                        hierarchy_valid = False
+                        break
+                    if val.lower() not in valid_values.get(fk, {}):
+                        results['failed'] += 1
+                        results['errors'].append({
+                            'employee_code': emp_code or 'UNKNOWN',
+                            'error': f"Invalid {field['label']}: '{val}'"
+                        })
+                        hierarchy_valid = False
+                        break
+                    hierarchy_values[fk] = valid_values[fk][val.lower()]
+
+                if not hierarchy_valid:
                     continue
 
-                if department_input.lower() not in valid_depts:
-                    results['failed'] += 1
-                    results['errors'].append({'employee_code': emp_code, 'error': f"Invalid department '{department_input}'"})
+                # Parse salary components
+                salary_components = wd.get('salary_components', {})
+                salary_valid = True
+                for comp in active_components:
+                    ck = comp['key']
+                    val = salary_components.get(ck, 0)
+                    try:
+                        val = float(val)
+                        if val < 0:
+                            raise ValueError()
+                        salary_components[ck] = val
+                    except (ValueError, TypeError):
+                        results['failed'] += 1
+                        results['errors'].append({
+                            'employee_code': emp_code or 'UNKNOWN',
+                            'error': f"Invalid {comp['label']}"
+                        })
+                        salary_valid = False
+                        break
+
+                if not salary_valid:
                     continue
 
-                try:
-                    basic_salary = float(basic_salary)
-                    hra = float(hra)
-                    if basic_salary < 0 or hra < 0:
-                        raise ValueError()
-                except (ValueError, TypeError):
-                    results['failed'] += 1
-                    results['errors'].append({'employee_code': emp_code, 'error': 'Invalid salary values'})
-                    continue
+                contact_info = wd.get('contact_info', [])
 
-                HRWorker.create(
+                worker = HRWorker.create(
                     workspace_id=workspace_id,
-                    employee_code=emp_code,
                     operator_name=operator_name,
-                    designation=valid_desig[designation_input.lower()],
-                    department=valid_depts[department_input.lower()],
                     created_by=created_by,
-                    mobile_number=mobile,
-                    esi_number=esi_number,
+                    employee_code=emp_code or None,
+                    hierarchy_values=hierarchy_values,
+                    contact_info=contact_info,
+                    salary_components=salary_components,
                     date_of_joining=doj,
                     coverage=coverage,
-                    basic_salary=basic_salary,
-                    hra=hra,
                 )
-                existing_codes.add(emp_code)
+                existing_codes.add(worker.employee_code)
                 results['success'] += 1
 
             except Exception as e:
                 results['failed'] += 1
-                results['errors'].append({'employee_code': wd.get('employee_code', 'UNKNOWN'), 'error': str(e)})
+                results['errors'].append({
+                    'employee_code': wd.get('employee_code', 'UNKNOWN'),
+                    'error': str(e)
+                })
 
         return results
 
@@ -464,7 +488,6 @@ class HRService:
         """
         Mark/update attendance for a worker.
         Returns (attendance_dict, error, metadata)
-        metadata includes: is_update, is_frozen, should_send_email, email_reason, days_ago
         """
         employee_code = data.get('employee_code', '').strip().upper()
         date = data.get('date', '').strip()
@@ -491,18 +514,15 @@ class HRService:
         if status not in ('PRESENT', 'ABSENT'):
             return None, "status must be PRESENT or ABSENT", metadata
 
-        # Find worker
         worker = HRWorker.find_by_employee_code(workspace_id, employee_code)
         if not worker:
             return None, f"Worker with employee code '{employee_code}' does not exist", metadata
         if not worker.is_active:
             return None, "Worker is not active", metadata
 
-        # Get settings for unfrozen period
         settings = HRSettings.get_or_create(workspace_id)
         unfrozen_days = settings.unfrozen_days
 
-        # Adjust status data
         if status == 'ABSENT':
             shifts_worked = 0
             hours_worked = 0.0
@@ -528,7 +548,6 @@ class HRService:
             user_email=user_email,
         )
 
-        # Determine frozen/unfrozen and email logic
         days_ago = (today - date_obj.date()).days
         is_today = date_obj.date() == today
         is_within_unfrozen = 0 <= days_ago < unfrozen_days
@@ -546,7 +565,6 @@ class HRService:
                 should_send_email = True
                 email_reason = "New entry on frozen date"
             else:
-                # Check if data actually changed
                 if existing_data:
                     changes = []
                     if existing_data.get('status') != status:
@@ -582,7 +600,7 @@ class HRService:
 
         dept_data = {}
         for worker in workers:
-            dept = worker.department or 'Unknown'
+            dept = worker.hierarchy_values.get('department', worker.department) or 'Unknown'
             if dept not in dept_data:
                 dept_data[dept] = {'total_workers': 0, 'present_count': 0,
                                    'absent_count': 0, 'total_manhours': 0.0}
@@ -618,8 +636,9 @@ class HRService:
         return settings.to_dict()
 
     @staticmethod
-    def update_settings(workspace_id: str, data: Dict[str, Any],
-                        updated_by: str) -> Tuple[Dict[str, Any], Optional[str]]:
+    def update_shift_settings(workspace_id: str, data: Dict[str, Any],
+                              updated_by: str) -> Tuple[Dict[str, Any], Optional[str]]:
+        """Update shift-related settings"""
         total_shifts = data.get('total_shifts_available', 2)
         default_hours = data.get('default_hours_worked', 10.0)
         unfrozen_days = data.get('unfrozen_days', 5)
@@ -635,6 +654,45 @@ class HRService:
         settings.total_shifts_available = int(total_shifts)
         settings.default_shift_hours = float(default_hours)
         settings.unfrozen_days = int(unfrozen_days)
+        settings.updated_by = updated_by
+        settings.save()
+        return settings.to_dict(), None
+
+    @staticmethod
+    def update_hierarchy_config(workspace_id: str, hierarchy_fields: List[Dict],
+                                updated_by: str) -> Tuple[Dict[str, Any], Optional[str]]:
+        """Update hierarchy field configuration (labels, active state)"""
+        if len(hierarchy_fields) > MAX_HIERARCHY_FIELDS:
+            return {}, f"Maximum {MAX_HIERARCHY_FIELDS} hierarchy fields allowed"
+
+        for i, field in enumerate(hierarchy_fields):
+            if not field.get('key'):
+                return {}, f"Field key is required for field {i+1}"
+            if not field.get('label', '').strip():
+                return {}, f"Field label is required for field {i+1}"
+            field['sort_order'] = i
+
+        settings = HRSettings.get_or_create(workspace_id)
+        settings.hierarchy_fields = hierarchy_fields
+        settings.updated_by = updated_by
+        settings.save()
+        return settings.to_dict(), None
+
+    @staticmethod
+    def update_salary_config(workspace_id: str, salary_components: List[Dict],
+                             updated_by: str) -> Tuple[Dict[str, Any], Optional[str]]:
+        """Update salary component configuration (labels, active state)"""
+        if len(salary_components) > MAX_SALARY_COMPONENTS:
+            return {}, f"Maximum {MAX_SALARY_COMPONENTS} salary components allowed"
+
+        for i, comp in enumerate(salary_components):
+            if not comp.get('key'):
+                return {}, f"Component key is required for component {i+1}"
+            if not comp.get('label', '').strip():
+                return {}, f"Component label is required for component {i+1}"
+
+        settings = HRSettings.get_or_create(workspace_id)
+        settings.salary_components = salary_components
         settings.updated_by = updated_by
         settings.save()
         return settings.to_dict(), None
@@ -675,15 +733,14 @@ class HRService:
         }
 
     @staticmethod
-    def get_department_breakdown(workspace_id: str, start_date: str, end_date: str) -> List[Dict[str, Any]]:
-        """Get department-wise cost breakdown for a date range"""
+    def get_department_breakdown(workspace_id: str, start_date: str,
+                                 end_date: str) -> List[Dict[str, Any]]:
         records = HRCost.get_by_range(workspace_id, start_date, end_date)
         if not records:
             return []
 
         dept_data = {}
         total_company_cost = 0
-        num_days = len(records)
 
         for record in records:
             total_company_cost += record.summary.get('total_company_cost', 0)
@@ -710,8 +767,8 @@ class HRService:
         return departments
 
     @staticmethod
-    def get_daily_cost_breakdown(workspace_id: str, start_date: str, end_date: str) -> List[Dict[str, Any]]:
-        """Get day-by-day cost breakdown"""
+    def get_daily_cost_breakdown(workspace_id: str, start_date: str,
+                                  end_date: str) -> List[Dict[str, Any]]:
         records = HRCost.get_by_range(workspace_id, start_date, end_date)
         if not records:
             return []
@@ -736,7 +793,6 @@ class HRService:
     @staticmethod
     def get_worker_cost(workspace_id: str, employee_code: str,
                         start_date: str, end_date: str) -> Optional[Dict[str, Any]]:
-        """Get cost details for a specific worker"""
         records = HRCost.get_by_range(workspace_id, start_date, end_date)
         if not records:
             return None
@@ -791,7 +847,6 @@ class HRService:
 
     @staticmethod
     def get_workspace_admin_emails(workspace_id: str) -> List[str]:
-        """Get email addresses of all workspace admins"""
         admin_memberships = WorkspaceMembership.get_workspace_admins(workspace_id)
         emails = []
         for membership in admin_memberships:
@@ -807,7 +862,6 @@ class HRService:
                                      old_data: Optional[Dict] = None,
                                      new_data: Optional[Dict] = None,
                                      user_email: str = '') -> bool:
-        """Send attendance notification email to workspace admins"""
         try:
             from app.utils.email_service import send_email
 
@@ -858,15 +912,23 @@ class HRService:
     @staticmethod
     def get_dashboard_stats(workspace_id: str) -> Dict[str, Any]:
         """Get statistics for the HR dashboard"""
-        depts = HRDepartment.get_by_workspace(workspace_id)
-        types = HRManpowerType.get_by_workspace(workspace_id)
-        workers = HRWorker.get_by_workspace(workspace_id)
         settings = HRSettings.get_or_create(workspace_id)
+        workers = HRWorker.get_by_workspace(workspace_id)
+
+        # Count hierarchy values per active field
+        active_fields = settings.get_active_hierarchy_fields()
+        hierarchy_counts = {}
+        for field in active_fields:
+            values = HRHierarchyValue.get_by_workspace_and_field(workspace_id, field['key'])
+            hierarchy_counts[field['key']] = {
+                'label': field['label'],
+                'count': len(values),
+            }
 
         return {
-            'total_departments': len(depts),
-            'active_departments': len([d for d in depts if d.is_active]),
-            'manpower_types': len(types),
             'total_workers': len(workers),
+            'employee_limit': settings.employee_limit,
             'shift_hours': settings.default_shift_hours,
+            'hierarchy_counts': hierarchy_counts,
+            'active_salary_components': len(settings.get_active_salary_components()),
         }
