@@ -14,6 +14,7 @@ from app.models.hr_attendance import HRAttendance
 from app.models.hr_settings import (
     HRSettings, DEFAULT_SHIFT_HOURS,
     MAX_HIERARCHY_FIELDS, MAX_SALARY_COMPONENTS,
+    DEFAULT_COST_BASE_HOURS_PER_DAY, DEFAULT_COST_BASE_DAYS_PER_MONTH,
 )
 from app.models.hr_cost import HRCost
 from app.models.workspace_membership import WorkspaceMembership
@@ -697,6 +698,145 @@ class HRService:
         settings.save()
         return settings.to_dict(), None
 
+    @staticmethod
+    def update_cost_config(workspace_id: str, data: Dict[str, Any],
+                           updated_by: str) -> Tuple[Dict[str, Any], Optional[str]]:
+        """Update cost calculation configuration"""
+        base_hours = data.get('cost_base_hours_per_day', DEFAULT_COST_BASE_HOURS_PER_DAY)
+        base_days = data.get('cost_base_days_per_month', DEFAULT_COST_BASE_DAYS_PER_MONTH)
+
+        try:
+            base_hours = float(base_hours)
+            base_days = int(base_days)
+        except (ValueError, TypeError):
+            return {}, "Base hours and base days must be valid numbers"
+
+        if base_hours < 1 or base_hours > 24:
+            return {}, "Base hours per day must be between 1 and 24"
+        if base_days < 1 or base_days > 365:
+            return {}, "Base days per month must be between 1 and 365"
+
+        settings = HRSettings.get_or_create(workspace_id)
+        settings.cost_base_hours_per_day = base_hours
+        settings.cost_base_days_per_month = base_days
+        settings.updated_by = updated_by
+        settings.save()
+        return settings.to_dict(), None
+
+    # ==================== COST CALCULATION ====================
+
+    @staticmethod
+    def calculate_daily_cost(workspace_id: str, date: str) -> Dict[str, Any]:
+        """
+        Calculate and save daily cost for a workspace.
+        Called by the 1 AM cron job via HTTP scheduler.
+
+        Logic: hourly_rate = total_salary / (base_hours_per_day * base_days_per_month)
+               todays_cost = hourly_rate * hours_worked (0 if ABSENT)
+        """
+        settings = HRSettings.get_or_create(workspace_id)
+        workers = HRWorker.get_by_workspace(workspace_id)
+        attendance_records = HRAttendance.get_by_date(workspace_id, date)
+        attendance_map = {r.employee_code: r for r in attendance_records}
+
+        base_hours = settings.cost_base_hours_per_day
+        base_days = settings.cost_base_days_per_month
+        divisor = base_hours * base_days
+
+        total_company_cost = 0.0
+        total_attendance_hours = 0.0
+        present_count = 0
+        absent_count = 0
+        worker_costs = []
+
+        for worker in workers:
+            current_rem = worker.get_current_remuneration()
+            components = current_rem.get('components', {})
+            total_salary = sum(components.values())
+            hourly_rate = round(total_salary / divisor, 4) if divisor > 0 else 0
+
+            att = attendance_map.get(worker.employee_code)
+            if att and att.status == 'PRESENT':
+                hours_worked = att.hours_worked or 0.0
+                shifts_worked = att.shifts_worked or 0
+                todays_cost = round(hourly_rate * hours_worked, 2)
+                present_count += 1
+            else:
+                hours_worked = 0.0
+                shifts_worked = 0
+                todays_cost = 0.0
+                absent_count += 1
+
+            total_company_cost += todays_cost
+            total_attendance_hours += hours_worked
+
+            worker_costs.append({
+                'employee_code': worker.employee_code,
+                'worker_id': worker.id,
+                'worker_name': worker.operator_name,
+                'hierarchy_values': worker.hierarchy_values,
+                'salary_info': {
+                    'components': components,
+                    'total_salary': round(total_salary, 2),
+                    'hourly_rate': hourly_rate,
+                },
+                'attendance_info': {
+                    'status': att.status if att else 'ABSENT',
+                    'hours_worked': hours_worked,
+                    'shifts_worked': shifts_worked,
+                },
+                'todays_cost': todays_cost,
+            })
+
+        cost_data = {
+            'summary': {
+                'total_company_cost': round(total_company_cost, 2),
+                'total_attendance_hours': round(total_attendance_hours, 2),
+            },
+            'calculation_metadata': {
+                'total_workers': len(workers),
+                'present_workers': present_count,
+                'absent_workers': absent_count,
+                'calculated_at': datetime.utcnow().isoformat(),
+                'cost_base_hours_per_day': base_hours,
+                'cost_base_days_per_month': base_days,
+            },
+            'workers': worker_costs,
+        }
+
+        HRCost.save_daily_cost(workspace_id, date, cost_data)
+        return cost_data
+
+    @staticmethod
+    def calculate_all_workspaces_cost(date: str) -> Dict[str, Any]:
+        """
+        Calculate daily cost for ALL workspaces that have HR workers.
+        Called by the HTTP scheduler cron job at 1 AM.
+        """
+        from app.models.workspace import Workspace
+        results = {'success': 0, 'failed': 0, 'errors': [], 'workspaces_processed': []}
+
+        # Get all active workspaces
+        all_workspaces = Workspace.repository.get_all()
+
+        for ws_data in all_workspaces:
+            ws_id = ws_data.get('id')
+            if not ws_id or not ws_data.get('is_active', True):
+                continue
+            try:
+                # Only calculate if workspace has workers
+                workers = HRWorker.get_by_workspace(ws_id)
+                if not workers:
+                    continue
+                HRService.calculate_daily_cost(ws_id, date)
+                results['success'] += 1
+                results['workspaces_processed'].append(ws_id)
+            except Exception as e:
+                results['failed'] += 1
+                results['errors'].append({'workspace_id': ws_id, 'error': str(e)})
+
+        return results
+
     # ==================== COST ANALYTICS ====================
 
     @staticmethod
@@ -733,38 +873,41 @@ class HRService:
         }
 
     @staticmethod
-    def get_department_breakdown(workspace_id: str, start_date: str,
-                                 end_date: str) -> List[Dict[str, Any]]:
+    def get_hierarchy_breakdown(workspace_id: str, start_date: str,
+                                end_date: str, field_key: str = 'department') -> List[Dict[str, Any]]:
+        """Get cost breakdown by any hierarchy field (department, designation, custom, etc.)"""
         records = HRCost.get_by_range(workspace_id, start_date, end_date)
         if not records:
             return []
 
-        dept_data = {}
+        group_data = {}
         total_company_cost = 0
 
         for record in records:
             total_company_cost += record.summary.get('total_company_cost', 0)
             for worker in record.workers:
-                dept = worker.get('department', 'Unknown')
-                if dept not in dept_data:
-                    dept_data[dept] = {'total_cost': 0, 'total_hours': 0, 'unique_workers': set()}
-                dept_data[dept]['total_cost'] += worker.get('todays_salary', 0)
-                dept_data[dept]['total_hours'] += worker.get('attendance_info', {}).get('hours_worked', 0)
-                dept_data[dept]['unique_workers'].add(worker.get('employee_code'))
+                hierarchy_values = worker.get('hierarchy_values', {})
+                group_value = hierarchy_values.get(field_key, 'Unknown')
+                if group_value not in group_data:
+                    group_data[group_value] = {'total_cost': 0, 'total_hours': 0, 'unique_workers': set()}
+                group_data[group_value]['total_cost'] += worker.get('todays_cost', 0)
+                group_data[group_value]['total_hours'] += worker.get('attendance_info', {}).get('hours_worked', 0)
+                group_data[group_value]['unique_workers'].add(worker.get('employee_code'))
 
-        departments = []
-        for dept, data in dept_data.items():
+        breakdown = []
+        for value, data in group_data.items():
             pct = (data['total_cost'] / total_company_cost * 100) if total_company_cost else 0
-            departments.append({
-                'department': dept,
+            breakdown.append({
+                'field_key': field_key,
+                'value': value,
                 'total_cost': round(data['total_cost'], 2),
                 'total_hours': round(data['total_hours'], 2),
                 'percentage_of_total': round(pct, 2),
                 'total_workers': len(data['unique_workers']),
             })
 
-        departments.sort(key=lambda x: x['total_cost'], reverse=True)
-        return departments
+        breakdown.sort(key=lambda x: x['total_cost'], reverse=True)
+        return breakdown
 
     @staticmethod
     def get_daily_cost_breakdown(workspace_id: str, start_date: str,
@@ -811,12 +954,11 @@ class HRService:
                         worker_info = {
                             'employee_code': worker.get('employee_code'),
                             'worker_name': worker.get('worker_name'),
-                            'department': worker.get('department'),
-                            'designation': worker.get('designation'),
+                            'hierarchy_values': worker.get('hierarchy_values', {}),
                         }
-                    salary = worker.get('todays_salary', 0)
+                    cost = worker.get('todays_cost', 0)
                     hours = worker.get('attendance_info', {}).get('hours_worked', 0)
-                    total_cost += salary
+                    total_cost += cost
                     total_hours += hours
                     if hours > 0:
                         days_present += 1
@@ -826,7 +968,7 @@ class HRService:
                         'date': record.date,
                         'status': worker.get('attendance_info', {}).get('status', 'UNKNOWN'),
                         'hours_worked': hours,
-                        'todays_salary': round(salary, 2),
+                        'todays_cost': round(cost, 2),
                     })
                     break
 

@@ -20,6 +20,8 @@ DEFAULT_SHIFT_HOURS = 10.0
 DEFAULT_TOTAL_SHIFTS = 2
 DEFAULT_UNFROZEN_DAYS = 5
 DEFAULT_EMPLOYEE_LIMIT = 10
+DEFAULT_COST_BASE_HOURS_PER_DAY = 8.0
+DEFAULT_COST_BASE_DAYS_PER_MONTH = 30
 MAX_HIERARCHY_FIELDS = 5
 MAX_SALARY_COMPONENTS = 5
 
@@ -59,6 +61,8 @@ class HRSettings:
         self.employee_limit = data.get('employee_limit', DEFAULT_EMPLOYEE_LIMIT)
         self.hierarchy_fields = data.get('hierarchy_fields', DEFAULT_HIERARCHY_FIELDS)
         self.salary_components = data.get('salary_components', DEFAULT_SALARY_COMPONENTS)
+        self.cost_base_hours_per_day = data.get('cost_base_hours_per_day', DEFAULT_COST_BASE_HOURS_PER_DAY)
+        self.cost_base_days_per_month = data.get('cost_base_days_per_month', DEFAULT_COST_BASE_DAYS_PER_MONTH)
         self.updated_by = data.get('updated_by')
         self.created_at = data.get('created_at')
         self.updated_at = data.get('updated_at')
@@ -78,6 +82,8 @@ class HRSettings:
             'employee_limit': DEFAULT_EMPLOYEE_LIMIT,
             'hierarchy_fields': DEFAULT_HIERARCHY_FIELDS,
             'salary_components': DEFAULT_SALARY_COMPONENTS,
+            'cost_base_hours_per_day': DEFAULT_COST_BASE_HOURS_PER_DAY,
+            'cost_base_days_per_month': DEFAULT_COST_BASE_DAYS_PER_MONTH,
         }
         created = cls.repository.create(workspace_id, default_data)
         return cls(created)
@@ -101,6 +107,8 @@ class HRSettings:
             'employee_limit': self.employee_limit,
             'hierarchy_fields': self.hierarchy_fields,
             'salary_components': self.salary_components,
+            'cost_base_hours_per_day': self.cost_base_hours_per_day,
+            'cost_base_days_per_month': self.cost_base_days_per_month,
             'updated_by': self.updated_by,
         }
         return self.repository.update(self.id, data)
@@ -115,6 +123,8 @@ class HRSettings:
             'employee_limit': self.employee_limit,
             'hierarchy_fields': self.hierarchy_fields,
             'salary_components': self.salary_components,
+            'cost_base_hours_per_day': self.cost_base_hours_per_day,
+            'cost_base_days_per_month': self.cost_base_days_per_month,
             'updated_by': self.updated_by,
             'updated_at': self.updated_at.isoformat() if isinstance(self.updated_at, datetime) else self.updated_at,
         }
