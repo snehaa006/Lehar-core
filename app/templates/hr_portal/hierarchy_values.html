@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Manage {{ field_label }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Manage {{ field_label }}</h1>
+            <p class="text-gray-600 mt-1">Create, edit, and archive {{ field_label | lower }} values</p>
+        </div>
+        <div class="flex gap-3">
+            <button id="add-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                + Add {{ field_label }}
+            </button>
+            <a href="{{ url_for('hr_portal.hr_settings', workspace_id=workspace_id) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                ← Back
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <table class="min-w-full" id="values-table">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="values-tbody" class="divide-y divide-gray-200"></tbody>
+        </table>
+        <p id="empty-msg" class="text-gray-500 text-center py-8 hidden">No values yet. Click "+ Add {{ field_label }}" to create one.</p>
+    </div>
+</div>
+
+<div id="value-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <h3 id="modal-title" class="text-xl font-bold mb-4">Add {{ field_label }}</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input type="text" id="value-name" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea id="value-desc" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+            <button id="cancel-btn" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg">Cancel</button>
+            <button id="save-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_BASE = "/hr/{{ workspace_id }}/api/hierarchy/{{ field_key }}";
+let editingId = null;
+
+async function loadValues() {
+    try {
+        const res = await fetch(API_BASE);
+        const values = await res.json();
+        const tbody = document.getElementById('values-tbody');
+        const emptyMsg = document.getElementById('empty-msg');
+        tbody.innerHTML = '';
+
+        if (!values.length) {
+            emptyMsg.classList.remove('hidden');
+            return;
+        }
+        emptyMsg.classList.add('hidden');
+
+        values.forEach(v => {
+            const tr = document.createElement('tr');
+            const escapedName = v.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const escapedDesc = (v.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            tr.innerHTML = `
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">${v.name}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${v.description || '-'}</td>
+                <td class="px-6 py-4 text-sm">
+                    <button onclick="editValue('${v.id}','${escapedName}','${escapedDesc}')" class="text-blue-600 hover:text-blue-800 mr-3">Edit</button>
+                    <button onclick="deleteValue('${v.id}','${escapedName}')" class="text-red-600 hover:text-red-800">Archive</button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    } catch (e) { console.error('Failed to load values:', e); }
+}
+
+function showModal(title, name='', desc='') {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('value-name').value = name;
+    document.getElementById('value-desc').value = desc;
+    document.getElementById('value-modal').classList.remove('hidden');
+    document.getElementById('value-modal').classList.add('flex');
+}
+
+function hideModal() {
+    document.getElementById('value-modal').classList.add('hidden');
+    document.getElementById('value-modal').classList.remove('flex');
+    editingId = null;
+}
+
+document.getElementById('add-btn').addEventListener('click', () => { editingId = null; showModal('Add {{ field_label }}'); });
+document.getElementById('cancel-btn').addEventListener('click', hideModal);
+document.getElementById('save-btn').addEventListener('click', async () => {
+    const data = {
+        name: document.getElementById('value-name').value,
+        description: document.getElementById('value-desc').value
+    };
+    const url = editingId ? `${API_BASE}/${editingId}` : API_BASE;
+    const method = editingId ? 'PUT' : 'POST';
+    try {
+        const res = await fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+        const result = await res.json();
+        if (!res.ok) { alert(result.error || 'Failed'); return; }
+        hideModal(); loadValues();
+    } catch (e) { alert('Error: ' + e.message); }
+});
+
+function editValue(id, name, desc) { editingId = id; showModal('Edit {{ field_label }}', name, desc); }
+async function deleteValue(id, name) {
+    if (!confirm(`Archive "${name}"?`)) return;
+    try {
+        const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+        if (res.ok) loadValues();
+        else alert('Failed to archive');
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+loadValues();
+</script>
+{% endblock %}

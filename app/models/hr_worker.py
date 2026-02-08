@@ -1,6 +1,11 @@
 """
 HR Worker Model - Firestore Version
-Workers belong to a workspace. Each worker has remuneration history.
+Workers belong to a workspace. Supports:
+- Dynamic hierarchy fields (designation, department, custom fields)
+- Configurable salary components (up to 5, renameable)
+- Dynamic contact info (variable key-value pairs)
+- Auto-generated employee codes (EMP-001 format, workspace unique)
+- Salary versioning with history
 """
 from datetime import datetime
 from typing import Optional, Dict, Any, List
@@ -47,23 +52,23 @@ class HRWorkerRepository(BaseRepository):
             return data
         return None
 
-    def get_by_department(self, workspace_id: str, department: str, active_only: bool = True) -> List[Dict[str, Any]]:
-        """Get workers in a specific department"""
+    def get_max_employee_code_number(self, workspace_id: str) -> int:
+        """Get the highest numeric portion of EMP-XXX codes in a workspace"""
         query = self.collection.where(
             filter=FieldFilter("workspace_id", "==", workspace_id)
-        ).where(
-            filter=FieldFilter("department", "==", department)
         )
-        if active_only:
-            query = query.where(filter=FieldFilter("is_active", "==", True))
-
         docs = query.stream()
-        results = []
+        max_num = 0
         for doc in docs:
             data = doc.to_dict()
-            data['id'] = doc.id
-            results.append(data)
-        return results
+            code = data.get('employee_code', '')
+            if code.startswith('EMP-'):
+                try:
+                    num = int(code.split('-')[1])
+                    max_num = max(max_num, num)
+                except (IndexError, ValueError):
+                    continue
+        return max_num
 
 
 class HRWorker:
@@ -76,35 +81,51 @@ class HRWorker:
         self.workspace_id = data.get('workspace_id')
         self.employee_code = data.get('employee_code')
         self.operator_name = data.get('operator_name')
-        self.mobile_number = data.get('mobile_number', '')
-        self.esi_number = data.get('esi_number', '')
         self.date_of_joining = data.get('date_of_joining')
         self.coverage = data.get('coverage', '')
-        self.designation = data.get('designation')
-        self.department = data.get('department')
+        # Dynamic hierarchy values: {"designation": "Operator", "department": "Production", ...}
+        self.hierarchy_values = data.get('hierarchy_values', {})
+        # Dynamic contact info: [{"label": "Mobile", "value": "9876543210"}, ...]
+        self.contact_info = data.get('contact_info', [])
         self.is_active = data.get('is_active', True)
         self.created_by = data.get('created_by')
         self.created_at = data.get('created_at')
         self.updated_at = data.get('updated_at')
         self.updated_by = data.get('updated_by')
-        # Remuneration is stored as a nested object with history array
+        # Remuneration with dynamic salary components
         self.remuneration = data.get('remuneration', {'current_version': 0, 'history': []})
+        # Backward compat properties
+        self.designation = self.hierarchy_values.get('designation', data.get('designation', ''))
+        self.department = self.hierarchy_values.get('department', data.get('department', ''))
 
     @classmethod
-    def create(cls, workspace_id: str, employee_code: str, operator_name: str,
-               designation: str, department: str, created_by: str, **kwargs) -> 'HRWorker':
-        """Create a new worker"""
+    def generate_employee_code(cls, workspace_id: str) -> str:
+        """Generate next EMP-XXX code for workspace"""
+        max_num = cls.repository.get_max_employee_code_number(workspace_id)
+        return f"EMP-{max_num + 1:03d}"
+
+    @classmethod
+    def create(cls, workspace_id: str, operator_name: str, created_by: str,
+               employee_code: str = None, hierarchy_values: Dict[str, str] = None,
+               contact_info: List[Dict[str, str]] = None,
+               salary_components: Dict[str, float] = None,
+               date_of_joining: str = '', coverage: str = '', **kwargs) -> 'HRWorker':
+        """Create a new worker with dynamic fields"""
         worker_id = str(uuid.uuid4())
 
-        basic_salary = kwargs.get('basic_salary', 0)
-        hra = kwargs.get('hra', 0)
-        date_of_joining = kwargs.get('date_of_joining', '')
+        if not employee_code:
+            employee_code = cls.generate_employee_code(workspace_id)
+        else:
+            employee_code = employee_code.upper()
+
+        hierarchy_values = hierarchy_values or {}
+        contact_info = contact_info or []
+        salary_components = salary_components or {}
 
         initial_salary = {
             'version': 1,
-            'basic_salary': float(basic_salary),
-            'hra': float(hra),
-            'effective_date': date_of_joining,
+            'components': salary_components,
+            'effective_date': date_of_joining or datetime.utcnow().strftime('%Y-%m-%d'),
             'created_at': datetime.utcnow().isoformat(),
             'created_by': created_by,
             'remarks': 'Initial salary',
@@ -114,14 +135,12 @@ class HRWorker:
 
         data = {
             'workspace_id': workspace_id,
-            'employee_code': employee_code.upper(),
+            'employee_code': employee_code,
             'operator_name': operator_name,
-            'mobile_number': kwargs.get('mobile_number', ''),
-            'esi_number': kwargs.get('esi_number', ''),
             'date_of_joining': date_of_joining,
-            'coverage': kwargs.get('coverage', ''),
-            'designation': designation,
-            'department': department,
+            'coverage': coverage,
+            'hierarchy_values': hierarchy_values,
+            'contact_info': contact_info,
             'is_active': True,
             'created_by': created_by,
             'remuneration': {
@@ -148,16 +167,11 @@ class HRWorker:
         data = cls.repository.find_by_employee_code(workspace_id, employee_code)
         return cls(data) if data else None
 
-    @classmethod
-    def get_by_department(cls, workspace_id: str, department: str, active_only: bool = True) -> List['HRWorker']:
-        data_list = cls.repository.get_by_department(workspace_id, department, active_only)
-        return [cls(data) for data in data_list]
-
     def get_current_remuneration(self) -> Dict[str, Any]:
         """Get the latest remuneration record"""
         history = self.remuneration.get('history', [])
         if not history:
-            return {'basic_salary': 0, 'hra': 0, 'version': 0, 'effective_date': None}
+            return {'components': {}, 'version': 0, 'effective_date': None}
         return history[-1]
 
     def add_salary_record(self, record: Dict[str, Any]) -> bool:
@@ -176,12 +190,10 @@ class HRWorker:
         data = {
             'employee_code': self.employee_code,
             'operator_name': self.operator_name,
-            'mobile_number': self.mobile_number,
-            'esi_number': self.esi_number,
             'date_of_joining': self.date_of_joining,
             'coverage': self.coverage,
-            'designation': self.designation,
-            'department': self.department,
+            'hierarchy_values': self.hierarchy_values,
+            'contact_info': self.contact_info,
             'is_active': self.is_active,
             'remuneration': self.remuneration,
             'updated_by': self.updated_by,
@@ -201,13 +213,14 @@ class HRWorker:
         return {
             'id': self.id,
             'workspace_id': self.workspace_id,
-            'unique_worker_id': self.id,  # backward compat alias
+            'unique_worker_id': self.id,
             'employee_code': self.employee_code,
             'operator_name': self.operator_name,
-            'mobile_number': self.mobile_number,
-            'esi_number': self.esi_number,
             'date_of_joining': self.date_of_joining,
             'coverage': self.coverage,
+            'hierarchy_values': self.hierarchy_values,
+            'contact_info': self.contact_info,
+            # Backward compat
             'designation': self.designation,
             'department': self.department,
             'is_active': self.is_active,
