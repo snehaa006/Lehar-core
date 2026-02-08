@@ -503,6 +503,84 @@ def update_salary_config(workspace_id):
         return jsonify({"error": f"Failed to update salary config: {str(e)}"}), 500
 
 
+@hr_portal_bp.route('/<workspace_id>/api/v1/settings/cost', methods=['POST'])
+@login_required
+def update_cost_config(workspace_id):
+    """Update cost calculation configuration"""
+    membership, err = _check_workspace_admin(workspace_id)
+    if err:
+        return err
+    try:
+        data = request.get_json()
+        settings, error = HRService.update_cost_config(workspace_id, data, current_user.email)
+        if error:
+            return jsonify({"error": error}), 400
+        return jsonify(settings), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to update cost config: {str(e)}"}), 500
+
+
+# ==================== COST CALCULATION CRON ====================
+
+@hr_portal_bp.route('/api/cron/calculate-cost', methods=['POST'])
+def cron_calculate_cost():
+    """
+    HTTP endpoint for the 1 AM daily scheduler.
+    No auth required (called by Cloud Scheduler).
+    Calculates daily cost for all workspaces with workers.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        date = data.get('date')
+        if not date:
+            # Default to yesterday (since cron runs at 1 AM, calculate previous day)
+            from datetime import timedelta
+            date = (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%d')
+
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+        except ValueError:
+            return jsonify({"error": "date must be in YYYY-MM-DD format"}), 400
+
+        results = HRService.calculate_all_workspaces_cost(date)
+        return jsonify({
+            "message": f"Cost calculation completed for {date}",
+            "date": date,
+            "results": results,
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Cost calculation failed: {str(e)}"}), 500
+
+
+@hr_portal_bp.route('/<workspace_id>/api/cron/calculate-cost', methods=['POST'])
+def cron_calculate_workspace_cost(workspace_id):
+    """
+    HTTP endpoint to calculate cost for a single workspace.
+    No auth required (called by Cloud Scheduler or admin tools).
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        date = data.get('date')
+        if not date:
+            from datetime import timedelta
+            date = (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%d')
+
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+        except ValueError:
+            return jsonify({"error": "date must be in YYYY-MM-DD format"}), 400
+
+        result = HRService.calculate_daily_cost(workspace_id, date)
+        return jsonify({
+            "message": f"Cost calculated for workspace {workspace_id} on {date}",
+            "date": date,
+            "summary": result.get('summary', {}),
+            "metadata": result.get('calculation_metadata', {}),
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Cost calculation failed: {str(e)}"}), 500
+
+
 # ==================== COST ANALYTICS API ====================
 
 @hr_portal_bp.route('/<workspace_id>/api/cost-analytics/summary', methods=['GET'])
@@ -522,18 +600,20 @@ def get_cost_summary(workspace_id):
         return jsonify({"error": f"Failed to get cost summary: {str(e)}"}), 500
 
 
-@hr_portal_bp.route('/<workspace_id>/api/cost-analytics/department-breakdown', methods=['GET'])
+@hr_portal_bp.route('/<workspace_id>/api/cost-analytics/hierarchy-breakdown', methods=['GET'])
 @login_required
-def get_department_breakdown(workspace_id):
+def get_hierarchy_breakdown(workspace_id):
+    """Get cost breakdown by any hierarchy field. Pass ?field_key=department (default)"""
     membership, err = _check_workspace_access(workspace_id)
     if err:
         return err
     try:
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
+        field_key = request.args.get('field_key', 'department')
         if not start_date or not end_date:
             return jsonify({"error": "start_date and end_date are required"}), 400
-        breakdown = HRService.get_department_breakdown(workspace_id, start_date, end_date)
+        breakdown = HRService.get_hierarchy_breakdown(workspace_id, start_date, end_date, field_key)
         return jsonify(breakdown), 200
     except Exception as e:
         return jsonify({"error": f"Failed to get breakdown: {str(e)}"}), 500
